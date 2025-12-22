@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 
 namespace KeyZee.Infrastructure.Options;
@@ -31,9 +32,9 @@ public sealed class KeyZeeOptionsBuilder
         return this;
     }
 
-    public KeyZeeOptionsBuilder WithAppName(string applicationName)
+    public KeyZeeOptionsBuilder WithAppName(string appName)
     {
-        _options.AppName = applicationName;
+        _options.AppName = appName;
 
         return this;
     }

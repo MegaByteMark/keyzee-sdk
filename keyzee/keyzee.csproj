@@ -12,7 +12,7 @@
     <Authors>MegaByteMark</Authors>
     <Description>A minimal self-hostable encrypted key value pair sdk that can be used with any
       modern relational database written in .NET Core</Description>
-    <PackageTags>configuration;settings</PackageTags>
+    <PackageTags>configuration;settings;sqlserver</PackageTags>
     <PackageProjectUrl>https://github.com/MegaByteMark/keyzee-sdk</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MegaByteMark/keyzee-sdk</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -26,7 +26,8 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="IntraDotNet.EFCore.Infrastructure" Version="1.0.1" />
     <PackageReference Include="IntraDotNet.EFCore.Infrastructure.Repositories" Version="1.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />
+
   </ItemGroup>
 
   <ItemGroup>
