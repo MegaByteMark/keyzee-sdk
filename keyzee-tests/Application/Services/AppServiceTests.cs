@@ -82,7 +82,6 @@ public class AppServiceTests
             Arg.Is<App>(a => a.Name == "NewApp"),
             Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
             Arg.Any<CancellationToken>());
-
     }
 
     [Fact]

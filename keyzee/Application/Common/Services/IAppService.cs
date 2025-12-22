@@ -8,7 +8,7 @@ namespace KeyZee.Application.Common.Services;
 public interface IAppService
 {
     Task<IEnumerable<AppDto>> GetAllAppsAsync(CancellationToken cancellationToken = default);
-    Task<AppDto?> GetByNameAsync(string appName, CancellationToken cancellationToken = default);
+    Task<AppDto?> GetAppByNameAsync(string appName, CancellationToken cancellationToken = default);
     Task<AppDto?> GetAppByIdAsync(Guid appId, CancellationToken cancellationToken = default);
     Task SaveAppAsync(AppDto appDto, CancellationToken cancellationToken = default);
     Task DeleteAppByNameAsync(string appName, CancellationToken cancellationToken = default);

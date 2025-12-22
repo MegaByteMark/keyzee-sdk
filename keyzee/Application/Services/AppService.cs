@@ -35,7 +35,7 @@ public sealed class AppService : IAppService
     /// </summary>
     /// <param name="appName">The name of the App.</param>
     /// <returns>The AppDto if found; otherwise, null.</returns>
-    public async Task<AppDto?> GetByNameAsync(string appName, CancellationToken cancellationToken = default)
+    public async Task<AppDto?> GetAppByNameAsync(string appName, CancellationToken cancellationToken = default)
     {
         var apps = await _appRepository.FindAsync(a => a.Name == appName, cancellationToken: cancellationToken);
 

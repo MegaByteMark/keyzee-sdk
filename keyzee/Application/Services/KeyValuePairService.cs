@@ -1,5 +1,6 @@
 using FluentValidation;
 using KeyZee.Application.Common.Encryption;
+using KeyZee.Application.Common.Exceptions;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
@@ -144,7 +145,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
             throw new ValidationException(validationResult.Errors);
         }
 
-        var application = await _appService.GetByNameAsync(keyValuePairDto.AppName, cancellationToken);
+        var application = await _appService.GetAppByNameAsync(keyValuePairDto.AppName, cancellationToken);
 
         if (application == null)
         {
@@ -157,7 +158,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
         var encryptedValue = EncryptValue(keyValuePairDto.Value);
         var existingKeyValuePairs = await _keyValuePairRepository.FindAsync(c => c.Application!.Name == keyValuePairDto.AppName && c.Key == keyValuePairDto.Key, cancellationToken: cancellationToken);
 
-        if (existingKeyValuePairs.Any())
+        if (existingKeyValuePairs != null && existingKeyValuePairs.Any())
         {
             keyValuePair = existingKeyValuePairs.First();
             keyValuePair.EncryptedValue = encryptedValue;
@@ -196,15 +197,17 @@ public sealed class KeyValuePairService : IKeyValuePairService
     public async Task DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
     {
         var keyValuePairs = await _keyValuePairRepository.FindAsync(c => c.Application!.Name == appName && c.Key == key, cancellationToken: cancellationToken);
-        var keyValuePair = keyValuePairs.FirstOrDefault();
 
-        if (keyValuePair != null)
+        if(keyValuePairs == null || !keyValuePairs.Any())
         {
-            keyValuePair.DeletedOn = DateTime.UtcNow;
-            keyValuePair.DeletedBy =
-            Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
-            await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+            throw new NotFoundException($"KeyValuePair with key '{key}' for application '{appName}' not found.");
         }
+
+        var keyValuePair = keyValuePairs.First();
+        keyValuePair.DeletedOn = DateTime.UtcNow;
+        keyValuePair.DeletedBy =
+        Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
+        await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
     }
 
     /// <summary>
@@ -213,17 +216,14 @@ public sealed class KeyValuePairService : IKeyValuePairService
     /// <param name="keyValuePairId">The ID of the KeyValuePair to delete.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async  Task DeleteKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default)
+    public async Task DeleteKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default)
     {
-        var keyValuePair = await _keyValuePairRepository.GetAsync(kvp => kvp.Id == keyValuePairId, cancellationToken: cancellationToken);
+        var keyValuePair = await _keyValuePairRepository.GetAsync(kvp => kvp.Id == keyValuePairId, cancellationToken: cancellationToken) ?? throw new NotFoundException($"KeyValuePair with ID '{keyValuePairId}' not found.");
 
-        if (keyValuePair != null)
-        {
-            keyValuePair.DeletedOn = DateTime.UtcNow;
-            keyValuePair.DeletedBy =
-            Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
-            await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
-        }
+        keyValuePair.DeletedOn = DateTime.UtcNow;
+        keyValuePair.DeletedBy =
+        Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
+        await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
     }
 
     /// <summary>

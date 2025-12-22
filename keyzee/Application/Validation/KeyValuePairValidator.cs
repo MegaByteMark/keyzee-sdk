@@ -19,7 +19,6 @@ public sealed class KeyValuePairValidator : AbstractValidator<KeyValuePairDto>
             .MaximumLength(500).WithMessage("Key cannot exceed 500 characters");
 
         RuleFor(x => x.Value)
-            .NotEmpty().WithMessage("Value is required")
             .MaximumLength(5000).WithMessage("Value cannot exceed 5000 characters");
     }
 }
