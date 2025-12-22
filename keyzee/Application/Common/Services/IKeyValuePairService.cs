@@ -12,7 +12,9 @@ public interface IKeyValuePairService
     Task<KeyValuePairDto?> GetKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default);
     Task<IEnumerable<KeyValuePairDto>> GetKeyValuePairsByAppAsync(string appName, CancellationToken cancellationToken = default);
     Task<IEnumerable<KeyValuePairDto>> GetKeyValuePairsByAppAsync(CancellationToken cancellationToken = default);
+    Task<KeyValuePairDto?> GetKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default);
     Task SaveKeyValuePairAsync(KeyValuePairDto keyValuePairDto, CancellationToken cancellationToken = default);
-    Task DeleteKeyValuePairAsync(string key, CancellationToken cancellationToken = default);
-    Task DeleteKeyValuePairAsync(string appName, string key, CancellationToken cancellationToken = default);
+    Task DeleteKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default);
+    Task DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default);
+    Task DeleteKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default);
 }

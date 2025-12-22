@@ -1,10 +1,12 @@
 using FluentValidation;
+using KeyZee.Application.Common.Encryption;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
 using KeyZee.Application.Services;
 using KeyZee.Application.Validation;
 using KeyZee.Infrastructure.DbContext;
+using KeyZee.Infrastructure.Encryption;
 using KeyZee.Infrastructure.Options;
 using KeyZee.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,6 +79,7 @@ public static class DependencyInjectionExtensions
     /// <returns>The updated IServiceCollection.</returns>
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
+        services.AddScoped<IEncryptionService, AesEncryptionService>();
         services.AddScoped<IKeyValuePairService, KeyValuePairService>();
         services.AddScoped<IAppService, AppService>();
 

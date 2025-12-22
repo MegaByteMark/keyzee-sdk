@@ -1,4 +1,5 @@
 using FluentValidation;
+using KeyZee.Application.Common.Encryption;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
@@ -23,6 +24,9 @@ public sealed class KeyValuePairService : IKeyValuePairService
     /// The KeyZee options.
     /// </summary>
     private readonly KeyZeeOptions _options;
+
+    private readonly IEncryptionService _encryptionService;
+
     /// <summary>
     /// The KeyValuePair DTO validator.
     /// </summary>
@@ -32,13 +36,15 @@ public sealed class KeyValuePairService : IKeyValuePairService
         IKeyValuePairRepository keyValuePairRepository,
         IAppService appService,
         KeyZeeOptions options,
-        IValidator<KeyValuePairDto> validator
+        IValidator<KeyValuePairDto> validator,
+        IEncryptionService encryptionService
     )
     {
         _keyValuePairRepository = keyValuePairRepository;
         _appService = appService;
         _options = options;
         _validator = validator;
+        _encryptionService = encryptionService;
     }
 
     /// <summary>
@@ -103,6 +109,19 @@ public sealed class KeyValuePairService : IKeyValuePairService
     }
 
     /// <summary>
+    /// Gets a KeyValuePair by its ID.
+    /// </summary>
+    /// <param name="keyValuePairId">The ID of the KeyValuePair.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The KeyValuePairDto if found; otherwise, null.</returns>
+    public async Task<KeyValuePairDto?> GetKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default)
+    {
+        var keyValuePair = await _keyValuePairRepository.GetAsync(kvp => kvp.Id == keyValuePairId, cancellationToken: cancellationToken);
+
+        return keyValuePair == null ? null : MapToDto(keyValuePair);
+    }
+
+    /// <summary>
     /// Saves a KeyValuePair.
     /// </summary>
     /// <param name="keyValuePairDto">The KeyValuePairDto to save.</param>
@@ -147,6 +166,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
         {
             keyValuePair = new Domain.Models.KeyValuePair
             {
+                Id = Guid.NewGuid(),
                 AppId = application.Id,
                 Key = keyValuePairDto.Key,
                 EncryptedValue = encryptedValue
@@ -162,9 +182,9 @@ public sealed class KeyValuePairService : IKeyValuePairService
     /// </summary>
     /// <param name="key">The key of the KeyValuePair to delete.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task DeleteKeyValuePairAsync(string key, CancellationToken cancellationToken = default)
+    public async Task DeleteKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default)
     {
-        await DeleteKeyValuePairAsync(_options.AppName, key, cancellationToken);
+        await DeleteKeyValuePairByAppAndKeyAsync(_options.AppName, key, cancellationToken);
     }
 
     /// <summary>
@@ -173,10 +193,29 @@ public sealed class KeyValuePairService : IKeyValuePairService
     /// <param name="appName">The name of the application.</param>
     /// <param name="key">The key of the KeyValuePair to delete.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task DeleteKeyValuePairAsync(string appName, string key, CancellationToken cancellationToken = default)
+    public async Task DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
     {
         var keyValuePairs = await _keyValuePairRepository.FindAsync(c => c.Application!.Name == appName && c.Key == key, cancellationToken: cancellationToken);
         var keyValuePair = keyValuePairs.FirstOrDefault();
+
+        if (keyValuePair != null)
+        {
+            keyValuePair.DeletedOn = DateTime.UtcNow;
+            keyValuePair.DeletedBy =
+            Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
+            await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Deletes a KeyValuePair by its ID.
+    /// </summary>
+    /// <param name="keyValuePairId">The ID of the KeyValuePair to delete.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public async  Task DeleteKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default)
+    {
+        var keyValuePair = await _keyValuePairRepository.GetAsync(kvp => kvp.Id == keyValuePairId, cancellationToken: cancellationToken);
 
         if (keyValuePair != null)
         {
@@ -210,19 +249,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
     /// <returns>The decrypted plain text value.</returns>
     private string DecryptValue(string encryptedValue)
     {
-        string key = _options.EncryptionKey;
-        string secret = _options.EncryptionSecret;
-
-        using var aes = System.Security.Cryptography.Aes.Create();
-        aes.Key = System.Text.Encoding.UTF8.GetBytes(key.PadRight(32)[..32]);
-        aes.IV = System.Text.Encoding.UTF8.GetBytes(secret.PadRight(16)[..16]);
-
-        using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-        using var msDecrypt = new MemoryStream(Convert.FromBase64String(encryptedValue));
-        using var csDecrypt = new System.Security.Cryptography.CryptoStream(msDecrypt, decryptor, System.Security.Cryptography.CryptoStreamMode.Read);
-        using var srDecrypt = new StreamReader(csDecrypt);
-
-        return srDecrypt.ReadToEnd();
+        return _encryptionService.Decrypt(encryptedValue);
     }
 
     /// <summary>
@@ -232,21 +259,6 @@ public sealed class KeyValuePairService : IKeyValuePairService
     /// <returns>The encrypted value as a base64 string.</returns>
     private string EncryptValue(string plainValue)
     {
-        string key = _options.EncryptionKey;
-        string secret = _options.EncryptionSecret;
-
-        using var aes = System.Security.Cryptography.Aes.Create();
-        aes.Key = System.Text.Encoding.UTF8.GetBytes(key.PadRight(32)[..32]);
-        aes.IV = System.Text.Encoding.UTF8.GetBytes(secret.PadRight(16)[..16]);
-
-        using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-        using var msEncrypt = new MemoryStream();
-        using var csEncrypt = new System.Security.Cryptography.CryptoStream(msEncrypt, encryptor, System.Security.Cryptography.CryptoStreamMode.Write);
-        using var swEncrypt = new StreamWriter(csEncrypt);
-        {
-            swEncrypt.Write(plainValue);
-        }
-
-        return Convert.ToBase64String(msEncrypt.ToArray());
+        return _encryptionService.Encrypt(plainValue);
     }
 }
