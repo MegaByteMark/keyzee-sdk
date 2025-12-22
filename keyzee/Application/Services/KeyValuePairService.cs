@@ -5,6 +5,7 @@ using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
 using KeyZee.Infrastructure.Options;
+using KeyZee.Infrastructure.UnitOfWork;
 
 namespace KeyZee.Application.Services;
 
@@ -13,6 +14,10 @@ namespace KeyZee.Application.Services;
 /// </summary>
 public sealed class KeyValuePairService : IKeyValuePairService
 {
+    /// <summary>
+    /// The Unit of Work for database operations.
+    /// </summary>
+    private readonly IKeyZeeUnitOfWork _unitOfWork;
     /// <summary>
     /// The KeyValuePair repository.
     /// </summary>
@@ -34,14 +39,15 @@ public sealed class KeyValuePairService : IKeyValuePairService
     private readonly IValidator<KeyValuePairDto> _validator;
 
     public KeyValuePairService(
-        IKeyValuePairRepository keyValuePairRepository,
+        IKeyZeeUnitOfWork unitOfWork,
         IAppService appService,
         KeyZeeOptions options,
         IValidator<KeyValuePairDto> validator,
         IEncryptionService encryptionService
     )
     {
-        _keyValuePairRepository = keyValuePairRepository;
+        _unitOfWork = unitOfWork;
+        _keyValuePairRepository = unitOfWork.KeyValuePairRepository;
         _appService = appService;
         _options = options;
         _validator = validator;
@@ -176,6 +182,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
 
         // Save or update the KeyValuePair
         await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -186,6 +193,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
     public async Task DeleteKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default)
     {
         await DeleteKeyValuePairByAppAndKeyAsync(_options.AppName, key, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -208,6 +216,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
         keyValuePair.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
         await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -224,6 +233,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
         keyValuePair.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
         await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>

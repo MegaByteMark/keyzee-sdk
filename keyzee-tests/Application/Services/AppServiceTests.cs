@@ -12,15 +12,19 @@ namespace KeyZee.Tests.Application.Services;
 
 public class AppServiceTests
 {
+    private readonly IKeyZeeUnitOfWork _unitOfWork;
     private readonly IAppRepository _mockRepo;
     private readonly IAppService _systemUnderTest; // System Under Test
     private readonly IValidator<AppDto> _validator;
 
     public AppServiceTests()
     {
+        _unitOfWork = Substitute.For<IKeyZeeUnitOfWork>();
         _mockRepo = Substitute.For<IAppRepository>();
+        _unitOfWork.AppRepository.Returns(_mockRepo);
+        
         _validator = new KeyZee.Application.Validation.AppValidator();
-        _systemUnderTest = new AppService(_mockRepo, _validator);
+        _systemUnderTest = new AppService(_unitOfWork, _validator);
     }
 
     [Fact]
@@ -253,7 +257,7 @@ public class AppServiceTests
     public async Task SaveAppAsync_ShouldMapPropertiesCorrectly()
     {
         // Arrange
-        var dto = new AppDto { Name = "MappedApp"};
+        var dto = new AppDto { Name = "MappedApp" };
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
 
         // Act

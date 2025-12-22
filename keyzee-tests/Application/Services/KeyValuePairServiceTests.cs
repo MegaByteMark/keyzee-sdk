@@ -9,13 +9,13 @@ using KeyZee.Application.Services;
 using KeyZee.Domain.Models;
 using KeyZee.Infrastructure.Encryption;
 using KeyZee.Infrastructure.Options;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NSubstitute;
 
 namespace KeyZee.Tests.Application.Services;
 
 public class KeyValuePairServiceTests
 {
+    private readonly IKeyZeeUnitOfWork _unitOfWork;
     private readonly IKeyValuePairRepository _mockRepo;
     private readonly IAppService _appService;
     private readonly IKeyValuePairService _systemUnderTest; // System Under Test
@@ -25,11 +25,14 @@ public class KeyValuePairServiceTests
 
     public KeyValuePairServiceTests()
     {
+        _unitOfWork = Substitute.For<IKeyZeeUnitOfWork>();
         _mockRepo = Substitute.For<IKeyValuePairRepository>();
+         _unitOfWork.KeyValuePairRepository.Returns(_mockRepo);
+
         _validator = new KeyZee.Application.Validation.KeyValuePairValidator();
         _appService = Substitute.For<IAppService>();
         _encryptionService = new AesEncryptionService(_options);
-        _systemUnderTest = new KeyValuePairService(_mockRepo, _appService, _options, _validator, _encryptionService);
+        _systemUnderTest = new KeyValuePairService(_unitOfWork, _appService, _options, _validator, _encryptionService);
     }
 
     [Fact]

@@ -9,6 +9,7 @@ using KeyZee.Infrastructure.DbContext;
 using KeyZee.Infrastructure.Encryption;
 using KeyZee.Infrastructure.Options;
 using KeyZee.Infrastructure.Repositories;
+using KeyZee.Infrastructure.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KeyZee.DependencyInjection;
@@ -38,10 +39,18 @@ public static class DependencyInjectionExtensions
 
         services.AddValidators();
         services.AddRepositories();
+        services.AddUnitOfWork();
         services.AddServices();
 
         // Register the configuration options as a singleton
         services.AddSingleton(kzOptions);
+
+        return services;
+    }
+
+    private static IServiceCollection AddUnitOfWork(this IServiceCollection services)
+    {
+        services.AddScoped<IKeyZeeUnitOfWork, KeyZeeUnitOfWork>();
 
         return services;
     }

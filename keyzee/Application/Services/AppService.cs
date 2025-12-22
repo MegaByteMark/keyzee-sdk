@@ -1,7 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using FluentValidation;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
+using KeyZee.Infrastructure.UnitOfWork;
 
 namespace KeyZee.Application.Services;
 
@@ -10,6 +12,10 @@ namespace KeyZee.Application.Services;
 /// </summary>
 public sealed class AppService : IAppService
 {
+    /// <summary>
+    /// The Unit of Work for database operations.
+    /// </summary>
+    private readonly IKeyZeeUnitOfWork _unitOfWork;
     /// <summary>
     /// The App repository.
     /// </summary>
@@ -24,9 +30,10 @@ public sealed class AppService : IAppService
     /// </summary>
     /// <param name="appRepository">The repository for App entities.</param>
     /// <param name="validator">The validator for AppDto.</param>
-    public AppService(IAppRepository appRepository, IValidator<AppDto> validator)
+    public AppService(IKeyZeeUnitOfWork unitOfWork, IValidator<AppDto> validator)
     {
-        _appRepository = appRepository;
+        _unitOfWork = unitOfWork;
+        _appRepository = unitOfWork.AppRepository;
         _validator = validator;
     }
 
@@ -100,6 +107,7 @@ public sealed class AppService : IAppService
         }
 
         await _appRepository.AddOrUpdateAsync(application, a => a.Id == application.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -117,6 +125,7 @@ public sealed class AppService : IAppService
         app.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
         await _appRepository.AddOrUpdateAsync(app, a => a.Id == app.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -134,6 +143,7 @@ public sealed class AppService : IAppService
         app.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
         await _appRepository.AddOrUpdateAsync(app, a => a.Id == app.Id, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
