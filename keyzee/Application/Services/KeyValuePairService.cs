@@ -215,7 +215,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
         keyValuePair.DeletedOn = DateTime.UtcNow;
         keyValuePair.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
-        await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+        await _keyValuePairRepository.DeleteAsync(kvp => kvp.Id == keyValuePair.Id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -232,7 +232,7 @@ public sealed class KeyValuePairService : IKeyValuePairService
         keyValuePair.DeletedOn = DateTime.UtcNow;
         keyValuePair.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
-        await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, c => c.Id == keyValuePair.Id, cancellationToken);
+        await _keyValuePairRepository.DeleteAsync(kvp => kvp.Id == keyValuePair.Id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

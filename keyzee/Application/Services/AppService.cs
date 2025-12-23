@@ -124,7 +124,7 @@ public sealed class AppService : IAppService
         app.DeletedOn = DateTime.UtcNow;
         app.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
-        await _appRepository.AddOrUpdateAsync(app, a => a.Id == app.Id, cancellationToken);
+        await _appRepository.DeleteAsync(a => a.Id == app.Id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -142,7 +142,7 @@ public sealed class AppService : IAppService
         app.DeletedOn = DateTime.UtcNow;
         app.DeletedBy =
         Environment.UserDomainName + "\\" + Environment.UserName ?? "unknown";
-        await _appRepository.AddOrUpdateAsync(app, a => a.Id == app.Id, cancellationToken);
+        await _appRepository.DeleteAsync(a => a.Id == app.Id, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 

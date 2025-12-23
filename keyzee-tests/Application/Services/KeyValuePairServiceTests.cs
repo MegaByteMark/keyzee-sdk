@@ -203,15 +203,14 @@ public class KeyValuePairServiceTests
         _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(keyValuePair);
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
+        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
                  .Returns(ValueTask.CompletedTask);
 
         // Act
         await _systemUnderTest.DeleteKeyValuePairByIdAsync(keyValuePairId);
 
         // Assert
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.Received(1).AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -224,7 +223,7 @@ public class KeyValuePairServiceTests
         _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns((Domain.Models.KeyValuePair?)null);
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
+        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
                  .Returns(ValueTask.CompletedTask);
 
         // Act
@@ -233,8 +232,7 @@ public class KeyValuePairServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
 
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.DidNotReceive().AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -247,15 +245,14 @@ public class KeyValuePairServiceTests
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(new List<Domain.Models.KeyValuePair> { keyValuePair });
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
+        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
                  .Returns(ValueTask.CompletedTask);
 
         // Act
         await _systemUnderTest.DeleteKeyValuePairByAppAndKeyAsync(keyValuePair.Key);
 
         // Assert
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.Received(1).AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -268,7 +265,7 @@ public class KeyValuePairServiceTests
         _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns((Domain.Models.KeyValuePair?)null);
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
+        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
                  .Returns(ValueTask.CompletedTask);
 
         // Act
@@ -277,8 +274,7 @@ public class KeyValuePairServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
 
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.DidNotReceive().AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]

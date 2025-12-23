@@ -183,15 +183,14 @@ public class AppServiceTests
         _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(app);
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
+        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
                  .Returns(ValueTask.CompletedTask);
 
         // Act
         await _systemUnderTest.DeleteAppByIdAsync(appId);
 
         // Assert
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.Received(1).AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -209,8 +208,7 @@ public class AppServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
 
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.DidNotReceive().AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -223,15 +221,14 @@ public class AppServiceTests
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([app]);
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
+        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
                  .Returns(ValueTask.CompletedTask);
 
         // Act
         await _systemUnderTest.DeleteAppByNameAsync(app.Name);
 
         // Assert
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.Received(1).AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -249,8 +246,7 @@ public class AppServiceTests
         // Assert
         await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
 
-        //Calls to AddOrUpdateAsync due to soft deleting
-        await _mockRepo.DidNotReceive().AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
