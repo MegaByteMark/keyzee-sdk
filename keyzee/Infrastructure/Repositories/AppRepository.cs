@@ -5,6 +5,6 @@ using IntraDotNet.CleanArchitecture.Infrastructure;
 
 namespace KeyZee.Infrastructure.Repositories;
 
-public sealed class AppRepository(KeyZeeDbContext context) : GuidRepository<App, KeyZeeDbContext>(context), IAppRepository
+public sealed class AppRepository(KeyZeeDbContext context) : GuidAuditableRepository<App, KeyZeeDbContext>(context), IAppRepository
 {
 }

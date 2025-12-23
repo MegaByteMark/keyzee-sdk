@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace KeyZee.Infrastructure.Repositories;
 
-public sealed class KeyValuePairRepository(KeyZeeDbContext context) : GuidRepository<Domain.Models.KeyValuePair, KeyZeeDbContext>(context), IKeyValuePairRepository
+public sealed class KeyValuePairRepository(KeyZeeDbContext context) : GuidAuditableRepository<Domain.Models.KeyValuePair, KeyZeeDbContext>(context), IKeyValuePairRepository
 {
     protected override IQueryable<Domain.Models.KeyValuePair> AddIncludes(IQueryable<Domain.Models.KeyValuePair> query)
     {

@@ -235,7 +235,16 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
 
     public async Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
     {
-        return await _keyValuePairRepository.FindAsync(kvp => kvp.Application!.Name == appName && kvp.Key == key, cancellationToken: cancellationToken)
+        appName ??= _options.AppName;
+
+        var appResult = await _appService.GetByNameAsync(appName, cancellationToken);
+
+        if (!appResult.IsSuccess || appResult.Value == null)
+        {
+            return ValueResult<KeyValuePairDto?>.Failure(["App not found."]);
+        }
+
+        return await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id && kvp.Key == key, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -244,6 +253,7 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 }
 
                 var keyValuePair = task.Result.FirstOrDefault();
+
                 if (keyValuePair == null)
                 {
                     return ValueResult<KeyValuePairDto?>.Success(null);
@@ -262,7 +272,9 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
 
     public async Task<ValueResult<IEnumerable<KeyValuePairDto>>> GetKeyValuePairsByAppAsync(string appName, CancellationToken cancellationToken = default)
     {
-        var appResult = await _appService.GetByNameAsync(_options.AppName, cancellationToken);
+        appName ??= _options.AppName;
+
+        var appResult = await _appService.GetByNameAsync(appName, cancellationToken);
 
         if (!appResult.IsSuccess || appResult.Value == null)
         {
@@ -302,6 +314,8 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
 
     public async Task<Result> DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
     {
+        appName ??= _options.AppName;
+
         return await GetKeyValuePairByAppAndKeyAsync(appName, key, cancellationToken)
             .ContinueWith(async task =>
             {
