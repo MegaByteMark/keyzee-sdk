@@ -1,10 +1,10 @@
-using IntraDotNet.Application.Core.Interfaces;
+using IntraDotNet.CleanArchitecture.Application.Common.Persistence;
 
 namespace KeyZee.Application.Common.Persistence;
 
 /// <summary>
 /// Repository interface for managing KeyValuePair entities.
 /// </summary>
-public interface IKeyValuePairRepository: IBaseRepository<Domain.Models.KeyValuePair>
+public interface IKeyValuePairRepository: IGuidRepository<Domain.Models.KeyValuePair>
 {
 }

@@ -1,4 +1,4 @@
-using IntraDotNet.Application.Core.Interfaces;
+using IntraDotNet.CleanArchitecture.Application.Common.Persistence;
 
 namespace KeyZee.Application.Common.Persistence;
 

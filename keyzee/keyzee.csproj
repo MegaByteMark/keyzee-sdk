@@ -24,8 +24,6 @@
     <PackageReference Include="dotenv.net" Version="4.0.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-    <PackageReference Include="IntraDotNet.EFCore.Infrastructure" Version="1.0.1" />
-    <PackageReference Include="IntraDotNet.EFCore.Infrastructure.Repositories" Version="1.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />
 
   </ItemGroup>
@@ -45,6 +43,10 @@
     <Folder Include="Infrastructure/Options/" />
     <Folder Include="Infrastructure/Repositories/" />
     <Folder Include="Infrastructure/UnitOfWork/" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture/intradotnet-cleanarchitecture.csproj" />
   </ItemGroup>
 
 </Project>

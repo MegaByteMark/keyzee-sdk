@@ -1,9 +1,11 @@
+using IntraDotNet.CleanArchitecture.Domain.Common.Persistence;
+
 namespace KeyZee.Application.Dtos;
 
 /// <summary>
 /// Data Transfer Object for App entity.
 /// </summary>
-public sealed class AppDto
+public sealed class AppDto: IGuidIdentifier
 {
     /// <summary>
     /// Gets or sets the unique identifier for the App.

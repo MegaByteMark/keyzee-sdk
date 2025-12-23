@@ -1,3 +1,5 @@
+using IntraDotNet.CleanArchitecture.Application.Common.Services;
+using IntraDotNet.CleanArchitecture.Application.Results;
 using KeyZee.Application.Dtos;
 
 namespace KeyZee.Application.Common.Services;
@@ -5,16 +7,12 @@ namespace KeyZee.Application.Common.Services;
 /// <summary>
 /// Service interface for managing KeyValuePair entities.
 /// </summary>
-public interface IKeyValuePairService
+public interface IKeyValuePairService: IGuidValidatableDataService<Domain.Models.KeyValuePair, KeyValuePairDto>
 {
-    Task<IEnumerable<KeyValuePairDto>> GetAllKeyValuePairsAsync(CancellationToken cancellationToken = default);
-    Task<KeyValuePairDto?> GetKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default);
-    Task<KeyValuePairDto?> GetKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default);
-    Task<IEnumerable<KeyValuePairDto>> GetKeyValuePairsByAppAsync(string appName, CancellationToken cancellationToken = default);
-    Task<IEnumerable<KeyValuePairDto>> GetKeyValuePairsByAppAsync(CancellationToken cancellationToken = default);
-    Task<KeyValuePairDto?> GetKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default);
-    Task SaveKeyValuePairAsync(KeyValuePairDto keyValuePairDto, CancellationToken cancellationToken = default);
-    Task DeleteKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default);
-    Task DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default);
-    Task DeleteKeyValuePairByIdAsync(Guid keyValuePairId, CancellationToken cancellationToken = default);
+    Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default);
+    Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default);
+    Task<ValueResult<IEnumerable<KeyValuePairDto>>> GetKeyValuePairsByAppAsync(string appName, CancellationToken cancellationToken = default);
+    Task<ValueResult<IEnumerable<KeyValuePairDto>>> GetKeyValuePairsByAppAsync(CancellationToken cancellationToken = default);
+    Task<Result> DeleteKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default);
+    Task<Result> DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default);
 }

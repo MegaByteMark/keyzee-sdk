@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using IntraDotNet.Domain.Core;
+using IntraDotNet.CleanArchitecture.Domain.Common.Persistence;
 
 namespace KeyZee.Domain.Models;
 
 /// <summary>
 /// Represents an application within the KeyZee system.
 /// </summary>
-public sealed class App : IAuditable
+public sealed class App : IGuidIdentifier, IAuditable, IRowVersion
 {
     [Required]
     public Guid Id { get; set; }
@@ -27,4 +27,7 @@ public sealed class App : IAuditable
 
     [MaxLength(200)]
     public string? DeletedBy { get; set; }
+
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

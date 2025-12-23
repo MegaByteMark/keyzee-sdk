@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using IntraDotNet.Domain.Core;
+using IntraDotNet.CleanArchitecture.Domain.Common.Persistence;
 
 namespace KeyZee.Domain.Models;
 
 /// <summary>
 /// Represents a key-value pair within an application in the KeyZee system.
 /// </summary>
-public sealed class KeyValuePair: IAuditable
+public sealed class KeyValuePair : IGuidIdentifier, IAuditable, IRowVersion
 {
     [Required]
     public Guid Id { get; set; }
@@ -35,4 +35,7 @@ public sealed class KeyValuePair: IAuditable
 
     [MaxLength(200)]
     public string? DeletedBy { get; set; }
+
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 }

@@ -187,7 +187,7 @@ public class AppServiceTests
                  .Returns(ValueTask.CompletedTask);
 
         // Act
-        await _systemUnderTest.DeleteAppByIdAsync(appId);
+        await _systemUnderTest.DeleteByIdAsync(appId);
 
         // Assert
         await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
@@ -203,7 +203,7 @@ public class AppServiceTests
                  .Returns((App?)null);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.DeleteAppByIdAsync(appId);
+        Func<Task> act = async () => await _systemUnderTest.DeleteByIdAsync(appId);
 
         // Assert
         await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
@@ -225,7 +225,7 @@ public class AppServiceTests
                  .Returns(ValueTask.CompletedTask);
 
         // Act
-        await _systemUnderTest.DeleteAppByNameAsync(app.Name);
+        await _systemUnderTest.DeleteByNameAsync(app.Name);
 
         // Assert
         await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
@@ -241,7 +241,7 @@ public class AppServiceTests
                  .Returns([]);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.DeleteAppByNameAsync("NonExistentApp");
+        Func<Task> act = async () => await _systemUnderTest.DeleteByNameAsync("NonExistentApp");
 
         // Assert
         await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException

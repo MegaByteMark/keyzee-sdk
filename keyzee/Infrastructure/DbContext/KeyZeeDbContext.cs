@@ -1,4 +1,4 @@
-using IntraDotNet.EntityFrameworkCore.Infrastructure.Relational;
+using IntraDotNet.CleanArchitecture.Infrastructure.Extensions;
 
 namespace KeyZee.Infrastructure.DbContext;
 

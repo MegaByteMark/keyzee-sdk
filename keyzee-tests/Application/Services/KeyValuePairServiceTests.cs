@@ -95,7 +95,7 @@ public class KeyValuePairServiceTests
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([]);
 
-        _appService.GetAppByNameAsync(appName, Arg.Any<CancellationToken>())
+        _appService.GetByNameAsync(appName, Arg.Any<CancellationToken>())
                    .Returns(new AppDto { Id = appId, Name = appName });
 
         // Act
