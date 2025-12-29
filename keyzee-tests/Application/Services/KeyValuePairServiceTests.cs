@@ -328,12 +328,41 @@ public class KeyValuePairServiceTests
         _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>()).Returns(null as Domain.Models.KeyValuePair);
 
         // Act
-        await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+
         await _mockRepo.Received(1).AddOrUpdateAsync(
             Arg.Is<Domain.Models.KeyValuePair>(kvp =>
                 kvp.Key == "MappedKey" && kvp.EncryptedValue == cipherText && kvp.AppId == appId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnAnError_WhenAppIdAndKeyAlreadyExist()
+    {
+        // Arrange
+        Guid appId = Guid.NewGuid();
+        Guid kvpId = Guid.NewGuid();
+
+        string cipherText = _encryptionService.Encrypt("MappedValue");
+
+        var dto = new KeyValuePairDto { AppId = appId, Id = kvpId, Key = "MappedKey", Value = "MappedValue", AppName = "MappedApp" };
+
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), withIncludes: Arg.Any<bool>(), includeDeleted: Arg.Any<bool>(), asNoTracking: Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+            .Returns([new Domain.Models.KeyValuePair { Id = Guid.NewGuid(), Key = "MappedKey", EncryptedValue = cipherText, AppId = appId }]);
+
+        // Act
+        var result = await _systemUnderTest.UpdateAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+
+        await _mockRepo.DidNotReceive().AddOrUpdateAsync(
+            Arg.Any<Domain.Models.KeyValuePair>(),
             Arg.Any<CancellationToken>());
     }
 }

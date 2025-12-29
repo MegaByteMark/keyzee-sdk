@@ -118,26 +118,7 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
     /// <returns>A Result indicating success or failure.</returns>
     protected override async Task<Result> CreateInternalAsync(KeyValuePairDto entity, CancellationToken cancellationToken = default)
     {
-        var keyValuePair = MapToEntity(entity);
-
-        return await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, cancellationToken).ContinueWith(async task =>
-        {
-            if (task.IsFaulted)
-            {
-                return Result.Failure([task.Exception?.InnerException!]);
-            }
-
-            try
-            {
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure([ex]);
-            }
-        }, cancellationToken).Unwrap();
+        return await UpdateInternalAsync(entity, cancellationToken);
     }
 
     /// <summary>
@@ -149,6 +130,21 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
     protected override async Task<Result> UpdateInternalAsync(KeyValuePairDto entity, CancellationToken cancellationToken = default)
     {
         var keyValuePair = MapToEntity(entity);
+
+        //Check to see if another kvp with this key and appId exists, this maintains our unique constraint on name.
+        try
+        {
+            var existing = await _keyValuePairRepository.FindAsync(kvp => kvp.Key == keyValuePair.Key && kvp.AppId == keyValuePair.AppId, withIncludes: false, asNoTracking: false, includeDeleted: true, cancellationToken: cancellationToken);
+
+            if (existing.Any())
+            {
+                return Result.Failure($"A KeyValuePair with the key '{keyValuePair.Key}' already exists for the specified application.");
+            }
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure([ex]);
+        }
 
         return await _keyValuePairRepository.AddOrUpdateAsync(keyValuePair, cancellationToken).ContinueWith(async task =>
         {
@@ -207,7 +203,7 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
         var keyValuePair = MapToEntity(entity);
 
         var existing = await _keyValuePairRepository.GetByIdAsync(keyValuePair.Id, withIncludes: false, asNoTracking: false, includeDeleted: false, cancellationToken: cancellationToken);
-        
+
         if (existing == null)
         {
             return Result.Failure(["KeyValuePair not found."]);
