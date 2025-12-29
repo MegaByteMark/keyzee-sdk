@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using System.Security;
 using FluentValidation;
 using IntraDotNet.CleanArchitecture.Application.Results;
 using IntraDotNet.CleanArchitecture.Application.Services;
@@ -8,7 +7,6 @@ using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
 using KeyZee.Infrastructure.Options;
-using Microsoft.Extensions.Options;
 
 namespace KeyZee.Application.Services;
 
@@ -75,6 +73,11 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
         };
     }
 
+    /// <summary>
+    /// Maps a KeyValuePairDto to a Domain.Models.KeyValuePair.
+    /// </summary>
+    /// <param name="dto">The KeyValuePairDto to map.</param>
+    /// <returns>A Domain.Models.KeyValuePair representing the mapped data.</returns>
     protected override Domain.Models.KeyValuePair MapToEntity(KeyValuePairDto dto)
     {
         return new Domain.Models.KeyValuePair
@@ -107,6 +110,12 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
         return _encryptionService.Encrypt(plainValue);
     }
 
+    /// <summary>
+    /// Creates a new KeyValuePair entity internally.
+    /// </summary>
+    /// <param name="entity">The KeyValuePairDto to create.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating success or failure.</returns>
     protected override async Task<Result> CreateInternalAsync(KeyValuePairDto entity, CancellationToken cancellationToken = default)
     {
         var keyValuePair = MapToEntity(entity);
@@ -118,12 +127,25 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 return Result.Failure([task.Exception?.InnerException!]);
             }
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure([ex]);
+            }
         }, cancellationToken).Unwrap();
     }
 
+    /// <summary>
+    /// Updates an existing KeyValuePair entity internally.
+    /// </summary>
+    /// <param name="entity">The KeyValuePairDto to update.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating success or failure.</returns>
     protected override async Task<Result> UpdateInternalAsync(KeyValuePairDto entity, CancellationToken cancellationToken = default)
     {
         var keyValuePair = MapToEntity(entity);
@@ -135,12 +157,25 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 return Result.Failure([task.Exception?.InnerException!]);
             }
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure([ex]);
+            }
         }, cancellationToken).Unwrap();
     }
 
+    /// <summary>
+    /// Validates a KeyValuePairDto entity.
+    /// </summary>
+    /// <param name="entity">The KeyValuePairDto to validate.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult indicating success or failure.</returns>
     public override async Task<ValueResult<bool>> ValidateAsync(KeyValuePairDto entity, CancellationToken cancellationToken = default)
     {
         return await _validator.ValidateAsync(entity, cancellationToken)
@@ -161,6 +196,12 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
             }, cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes a KeyValuePair entity.
+    /// </summary>
+    /// <param name="entity">The KeyValuePairDto to delete.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating success or failure.</returns>
     public override async Task<Result> DeleteAsync(KeyValuePairDto entity, CancellationToken cancellationToken = default)
     {
         var keyValuePair = MapToEntity(entity);
@@ -172,15 +213,27 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 return Result.Failure([task.Exception?.InnerException!]);
             }
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return Result.Success();
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure([ex]);
+            }
         }, cancellationToken).Unwrap();
     }
 
+    /// <summary>
+    /// Gets all KeyValuePair entities.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing a collection of KeyValuePairDto objects.</returns>
     public override async Task<ValueResult<IEnumerable<KeyValuePairDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _keyValuePairRepository.GetAllAsync(cancellationToken: cancellationToken)
+        return await _keyValuePairRepository.GetAllAsync(withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -189,15 +242,29 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 }
 
                 var keyValuePairs = task.Result;
-                var dtos = keyValuePairs.Select(MapToDto);
 
-                return ValueResult<IEnumerable<KeyValuePairDto>>.Success(dtos);
+                try
+                {
+                    var dtos = keyValuePairs.Select(MapToDto);
+
+                    return ValueResult<IEnumerable<KeyValuePairDto>>.Success(dtos);
+                }
+                catch (Exception ex)
+                {
+                    return ValueResult<IEnumerable<KeyValuePairDto>>.Failure([ex]);
+                }
             }, cancellationToken);
     }
 
+    /// <summary>
+    /// Finds KeyValuePair entities that match the specified predicate.
+    /// </summary>
+    /// <param name="predicate">The predicate to filter KeyValuePair entities.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing a collection of KeyValuePairDto objects that match the predicate.</returns>
     public override async Task<ValueResult<IEnumerable<KeyValuePairDto>>> FindAsync(Expression<Func<Domain.Models.KeyValuePair, bool>> predicate, CancellationToken cancellationToken = default)
     {
-        return await _keyValuePairRepository.FindAsync(predicate, cancellationToken: cancellationToken)
+        return await _keyValuePairRepository.FindAsync(predicate, withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -206,15 +273,29 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 }
 
                 var keyValuePairs = task.Result;
-                var dtos = keyValuePairs.Select(MapToDto);
 
-                return ValueResult<IEnumerable<KeyValuePairDto>>.Success(dtos);
+                try
+                {
+                    var dtos = keyValuePairs.Select(MapToDto);
+
+                    return ValueResult<IEnumerable<KeyValuePairDto>>.Success(dtos);
+                }
+                catch (Exception ex)
+                {
+                    return ValueResult<IEnumerable<KeyValuePairDto>>.Failure([ex]);
+                }
             }, cancellationToken);
     }
 
+    /// <summary>
+    ///  Gets a KeyValuePair entity by its unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the KeyValuePair entity.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing the KeyValuePairDto object.</returns>
     public override async Task<ValueResult<KeyValuePairDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _keyValuePairRepository.GetByIdAsync(id, cancellationToken: cancellationToken)
+        return await _keyValuePairRepository.GetByIdAsync(id, withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -223,17 +304,45 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                 }
 
                 var keyValuePair = task.Result;
+
                 if (keyValuePair == null)
                 {
                     return ValueResult<KeyValuePairDto>.Failure(["KeyValuePair not found."]);
                 }
 
-                var dto = MapToDto(keyValuePair);
-                return ValueResult<KeyValuePairDto>.Success(dto);
+                try
+                {
+                    var dto = MapToDto(keyValuePair);
+                    return ValueResult<KeyValuePairDto>.Success(dto);
+                }
+                catch (Exception ex)
+                {
+                    return ValueResult<KeyValuePairDto>.Failure([ex]);
+                }
             }, cancellationToken);
     }
 
-    public async Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Gets a KeyValuePair by application name and key, including soft-deleted entries.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing the KeyValuePairDto object, including soft-deleted entries.</returns>
+    public async Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyWithSoftDeletedAsync(string appName, string key, CancellationToken cancellationToken = default)
+    {
+        return await InternalGetKeyValuePairByAppAndKeyAsync(appName, key, includeDeleted: true, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets a KeyValuePair by application name and key.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="includeDeleted">Whether to include soft-deleted entries.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing the KeyValuePairDto object.</returns>
+    private async Task<ValueResult<KeyValuePairDto?>> InternalGetKeyValuePairByAppAndKeyAsync(string appName, string key, bool includeDeleted = false, CancellationToken cancellationToken = default)
     {
         appName ??= _options.AppName;
 
@@ -244,7 +353,7 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
             return ValueResult<KeyValuePairDto?>.Failure(["App not found."]);
         }
 
-        return await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id && kvp.Key == key, cancellationToken: cancellationToken)
+        return await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id && kvp.Key == key, withIncludes: true, includeDeleted: includeDeleted, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -259,17 +368,48 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                     return ValueResult<KeyValuePairDto?>.Success(null);
                 }
 
-                var dto = MapToDto(keyValuePair);
+                try
+                {
+                    var dto = MapToDto(keyValuePair);
 
-                return ValueResult<KeyValuePairDto?>.Success(dto);
+                    return ValueResult<KeyValuePairDto?>.Success(dto);
+                }
+                catch (Exception ex)
+                {
+                    return ValueResult<KeyValuePairDto?>.Failure([ex]);
+                }
             }, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets a KeyValuePair by application name and key.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing the KeyValuePairDto object.</returns>
+    public async Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
+    {
+        return await InternalGetKeyValuePairByAppAndKeyAsync(appName, key, includeDeleted: false, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets a KeyValuePair by key.
+    /// </summary>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing the KeyValuePairDto object.</returns>
     public async Task<ValueResult<KeyValuePairDto?>> GetKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default)
     {
         return await GetKeyValuePairByAppAndKeyAsync(_options.AppName, key, cancellationToken);
     }
 
+    /// <summary>
+    ///  Gets all KeyValuePair entities for a specific application.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A ValueResult containing a collection of KeyValuePairDto objects.</returns>
     public async Task<ValueResult<IEnumerable<KeyValuePairDto>>> GetKeyValuePairsByAppAsync(string appName, CancellationToken cancellationToken = default)
     {
         appName ??= _options.AppName;
@@ -281,7 +421,7 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
             return ValueResult<IEnumerable<KeyValuePairDto>>.Failure(["App not found."]);
         }
 
-        return await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id, cancellationToken: cancellationToken)
+        return await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id, withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -296,22 +436,47 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                     return ValueResult<IEnumerable<KeyValuePairDto>>.Success([]);
                 }
 
-                var dtos = keyValuePairs.Select(MapToDto);
+                try
+                {
+                    var dtos = keyValuePairs.Select(MapToDto);
 
-                return ValueResult<IEnumerable<KeyValuePairDto>>.Success(dtos);
+                    return ValueResult<IEnumerable<KeyValuePairDto>>.Success(dtos);
+                }
+                catch (Exception ex)
+                {
+                    return ValueResult<IEnumerable<KeyValuePairDto>>.Failure([ex]);
+                }
             }, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets all KeyValuePair entities for the default application.
+    /// </summary>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns></returns>
     public async Task<ValueResult<IEnumerable<KeyValuePairDto>>> GetKeyValuePairsByAppAsync(CancellationToken cancellationToken = default)
     {
         return await GetKeyValuePairsByAppAsync(_options.AppName, cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes a KeyValuePair by key.
+    /// </summary>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating the success or failure of the delete operation.</returns>
     public async Task<Result> DeleteKeyValuePairByAppAndKeyAsync(string key, CancellationToken cancellationToken = default)
     {
         return await DeleteKeyValuePairByAppAndKeyAsync(_options.AppName, key, cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes a KeyValuePair by application name and key.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating the success or failure of the delete operation.</returns>
     public async Task<Result> DeleteKeyValuePairByAppAndKeyAsync(string appName, string key, CancellationToken cancellationToken = default)
     {
         appName ??= _options.AppName;
@@ -331,14 +496,131 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
                     return Result.Failure(["KeyValuePair not found."]);
                 }
 
-                var deleteResult = await DeleteAsync(keyValuePairDto, cancellationToken);
-
-                if (!deleteResult.IsSuccess)
+                try
                 {
-                    return deleteResult;
-                }
+                    var deleteResult = await DeleteAsync(keyValuePairDto, cancellationToken);
 
-                return Result.Success();
+                    if (!deleteResult.IsSuccess)
+                    {
+                        return deleteResult;
+                    }
+
+                    return Result.Success();
+                }
+                catch (Exception ex)
+                {
+                    return Result.Failure([ex]);
+                }
             }, cancellationToken).Unwrap();
+    }
+
+    /// <summary>
+    /// Migrates all KeyValuePair entries for a specific application to use a new encryption key and secret.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="newKey">The new encryption key.</param>
+    /// <param name="newSecret">The new encryption secret.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating the success or failure of the migration operation.</returns>
+    public async Task<Result> MigrateByAppAsync(string appName, string newKey, string newSecret, CancellationToken cancellationToken = default)
+    {
+        string plainValue;
+
+        appName ??= _options.AppName;
+
+        var appResult = await _appService.GetByNameAsync(appName, cancellationToken);
+
+        if (!appResult.IsSuccess || appResult.Value == null)
+        {
+            return Result.Failure(["App not found."]);
+        }
+
+        try
+        {
+            var kvps = await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id, withIncludes: true, asNoTracking: false, includeDeleted: true, cancellationToken: cancellationToken);
+
+            if (kvps == null || !kvps.Any())
+            {
+                return Result.Success();
+            }
+
+            foreach (var kvp in kvps)
+            {
+                // Decrypt existing value using the current encryption key and secret from options
+                plainValue = DecryptValue(kvp.EncryptedValue);
+
+                // Re-encrypt value with the new key and secret and update the entity
+                kvp.EncryptedValue = _encryptionService.Encrypt(plainValue, newKey, newSecret);
+
+                await _keyValuePairRepository.AddOrUpdateAsync(kvp, cancellationToken);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure([ex]);
+        }
+    }
+
+    /// <summary>
+    ///  Migrates a specific KeyValuePair entry to use a new encryption key and secret.
+    /// </summary>
+    /// <param name="appName">The name of the application.</param>
+    /// <param name="key">The key of the KeyValuePair.</param>
+    /// <param name="newKey">The new encryption key.</param>
+    /// <param name="newSecret">The new encryption secret.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A Result indicating the success or failure of the migration operation.</returns>
+    public async Task<Result> MigrateByAppAndKeyAsync(string appName, string key, string newKey, string newSecret, CancellationToken cancellationToken = default)
+    {
+        string plainValue;
+        IEnumerable<Domain.Models.KeyValuePair> kvps;
+
+        appName ??= _options.AppName;
+
+        var appResult = await _appService.GetByNameAsync(appName, cancellationToken);
+
+        if (!appResult.IsSuccess || appResult.Value == null)
+        {
+            return Result.Failure(["App not found."]);
+        }
+
+        try
+        {
+            kvps = await _keyValuePairRepository.FindAsync(kvp => kvp.AppId == appResult.Value.Id && kvp.Key == key, withIncludes: true, asNoTracking: false, includeDeleted: true, cancellationToken: cancellationToken);
+
+            if (kvps == null || !kvps.Any())
+            {
+                return Result.Failure($"Key not found.");
+            }
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure([ex]);
+        }
+
+        try
+        {
+            var kvp = kvps.First();
+
+            // Decrypt existing value using the current encryption key and secret from options
+            plainValue = DecryptValue(kvp.EncryptedValue);
+
+            // Re-encrypt value with the new key and secret and update the entity
+            kvp.EncryptedValue = _encryptionService.Encrypt(plainValue, newKey, newSecret);
+
+            await _keyValuePairRepository.AddOrUpdateAsync(kvp, cancellationToken);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure([ex]);
+        }
     }
 }

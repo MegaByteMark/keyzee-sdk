@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../keyzee-migrations-sqlserver/keyzee-migrations-sqlserver.csproj" />
     <ProjectReference Include="../keyzee/keyzee.csproj" />
   </ItemGroup>
 

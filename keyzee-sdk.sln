@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyzee-seeder", "keyzee-see
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "intradotnet-cleanarchitecture", "..\intradotnet-cleanarchitecture\intradotnet-cleanarchitecture\intradotnet-cleanarchitecture.csproj", "{0C9B24CD-8BA6-4742-8682-FE07D1A5A9B9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyzee-migrations-sqlserver", "keyzee-migrations-sqlserver\keyzee-migrations-sqlserver.csproj", "{73F73926-F22E-48B9-99AA-00377ABA794E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{0C9B24CD-8BA6-4742-8682-FE07D1A5A9B9}.Release|x64.Build.0 = Release|Any CPU
 		{0C9B24CD-8BA6-4742-8682-FE07D1A5A9B9}.Release|x86.ActiveCfg = Release|Any CPU
 		{0C9B24CD-8BA6-4742-8682-FE07D1A5A9B9}.Release|x86.Build.0 = Release|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Debug|x64.Build.0 = Debug|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Debug|x86.Build.0 = Debug|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Release|x64.ActiveCfg = Release|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Release|x64.Build.0 = Release|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Release|x86.ActiveCfg = Release|Any CPU
+		{73F73926-F22E-48B9-99AA-00377ABA794E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

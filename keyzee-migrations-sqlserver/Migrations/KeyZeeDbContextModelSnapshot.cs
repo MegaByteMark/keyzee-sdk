@@ -4,19 +4,16 @@ using KeyZee.Infrastructure.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace KeyZee.Migrations
+namespace keyzee_migrations_sqlserver.Migrations
 {
     [DbContext(typeof(KeyZeeDbContext))]
-    [Migration("20251223162503_InitialCreate")]
-    partial class InitialCreate
+    partial class KeyZeeDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,7 +48,6 @@ namespace KeyZee.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTimeOffset?>("LastUpdateOn")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Name")
@@ -113,7 +109,6 @@ namespace KeyZee.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTimeOffset?>("LastUpdateOn")
-                        .ValueGeneratedOnUpdate()
                         .HasColumnType("datetimeoffset");
 
                     b.Property<byte[]>("RowVersion")

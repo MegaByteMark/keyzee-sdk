@@ -31,6 +31,10 @@ public sealed class KeyZeeDbContext : Microsoft.EntityFrameworkCore.DbContext
         modelBuilder.UseAuditable<Domain.Models.KeyValuePair>();
         modelBuilder.UseAuditable<Domain.Models.App>();
 
+        //Configure optimistic concurrency for entities that have RowVersion
+        modelBuilder.UseOptimisticConcurrency<Domain.Models.KeyValuePair>();
+        modelBuilder.UseOptimisticConcurrency<Domain.Models.App>();
+
         // Configure unique index for the app name because we can't have two apps with the same name
         modelBuilder.Entity<Domain.Models.App>(entity =>
         {
@@ -42,5 +46,12 @@ public sealed class KeyZeeDbContext : Microsoft.EntityFrameworkCore.DbContext
         {
             entity.HasIndex(e => new { e.AppId, e.Key }).IsUnique();
         });
+
+        //configure relationships
+        modelBuilder.Entity<Domain.Models.KeyValuePair>()
+            .HasOne(kvp => kvp.Application)
+            .WithMany()
+            .HasForeignKey(kvp => kvp.AppId)
+            .OnDelete(Microsoft.EntityFrameworkCore.DeleteBehavior.Cascade);
     }
 }

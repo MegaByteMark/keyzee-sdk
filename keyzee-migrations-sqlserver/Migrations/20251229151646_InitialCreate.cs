@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace KeyZee.Migrations
+namespace keyzee_migrations_sqlserver.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

@@ -103,7 +103,7 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
     /// <returns>A ValueResult containing a collection of AppDto objects.</returns>
     public override async Task<ValueResult<IEnumerable<AppDto>>> FindAsync(Expression<Func<App, bool>> predicate, CancellationToken cancellationToken = default)
     {
-        return await _appRepository.FindAsync(predicate, cancellationToken: cancellationToken).ContinueWith(task =>
+        return await _appRepository.FindAsync(predicate, withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken).ContinueWith(task =>
         {
             if (task.IsFaulted)
             {
@@ -124,7 +124,7 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
     /// <returns>A ValueResult containing a collection of AppDto objects.</returns>
     public override async Task<ValueResult<IEnumerable<AppDto>>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _appRepository.GetAllAsync(cancellationToken: cancellationToken).ContinueWith(task =>
+        return await _appRepository.GetAllAsync(withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken).ContinueWith(task =>
         {
             if (task.IsFaulted)
             {
@@ -146,7 +146,7 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
     /// <returns>A ValueResult containing the AppDto object.</returns>
     public override async Task<ValueResult<AppDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _appRepository.GetByIdAsync(id, cancellationToken: cancellationToken)
+        return await _appRepository.GetByIdAsync(id, withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)
@@ -205,26 +205,7 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
     /// <returns>A Result indicating the success or failure of the operation.</returns>
     protected override async Task<Result> CreateInternalAsync(AppDto entity, CancellationToken cancellationToken = default)
     {
-        var app = MapToEntity(entity);
-
-        return await _appRepository.AddOrUpdateAsync(app, cancellationToken)
-            .ContinueWith(async task =>
-            {
-                if (task.IsFaulted)
-                {
-                    return Result.Failure([task.Exception?.InnerException!]);
-                }
-
-                try
-                {
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-                    return Result.Success();
-                }
-                catch (Exception ex)
-                {
-                    return Result.Failure([ex]);
-                }
-            }, cancellationToken).Unwrap();
+        return await UpdateInternalAsync(entity, cancellationToken);
     }
 
     /// <summary>
@@ -236,6 +217,30 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
     protected override async Task<Result> UpdateInternalAsync(AppDto entity, CancellationToken cancellationToken = default)
     {
         var app = MapToEntity(entity);
+
+        //If no id came into the dto, check the DB to see if this app name exists already and if so update the id.
+        if (app.Id == Guid.Empty)
+        {
+            var existingAppResult = await GetByNameWithSoftDeletedAsync(app.Name, cancellationToken);
+
+            if (!existingAppResult.IsSuccess)
+            {
+                return Result.Failure(existingAppResult.Errors);
+            }
+
+            var existingApp = existingAppResult.Value;
+
+            if (existingApp is not null)
+            {
+                //found an existing app use its ID
+                app.Id = existingApp.Id;
+            }
+            else
+            {
+                //new app, assign new ID
+                app.Id = Guid.NewGuid();
+            }
+        }
 
         return await _appRepository.AddOrUpdateAsync(app, cancellationToken)
             .ContinueWith(async task =>
@@ -265,7 +270,30 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
     /// <returns>A ValueResult containing the AppDto if found, or null if not found.</returns>
     public async Task<ValueResult<AppDto?>> GetByNameAsync(string appName, CancellationToken cancellationToken = default)
     {
-        return await _appRepository.FindAsync(a => a.Name == appName, cancellationToken: cancellationToken)
+        return await _appRepository.FindAsync(a => a.Name == appName, withIncludes: true, includeDeleted: false, cancellationToken: cancellationToken)
+            .ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    return ValueResult<AppDto?>.Failure([task.Exception?.InnerException!]);
+                }
+
+                var app = task.Result.FirstOrDefault();
+
+                if (app == null)
+                {
+                    return ValueResult<AppDto?>.Success(null);
+                }
+
+                var appDto = MapToDto(app);
+
+                return ValueResult<AppDto?>.Success(appDto);
+            }, cancellationToken);
+    }
+
+    public async Task<ValueResult<AppDto?>> GetByNameWithSoftDeletedAsync(string appName, CancellationToken cancellationToken = default)
+    {
+        return await _appRepository.FindAsync(a => a.Name == appName, withIncludes: true, includeDeleted: true, cancellationToken: cancellationToken)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted)

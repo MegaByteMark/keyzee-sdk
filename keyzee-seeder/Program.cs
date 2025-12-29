@@ -15,7 +15,7 @@ internal class Program
                 {
                     options.WithDbContextOptions(builder =>
                     {
-                        builder.UseSqlServer(Environment.GetEnvironmentVariable("CONNECTION_STRING"));
+                        builder.UseSqlServer(Environment.GetEnvironmentVariable("CONNECTION_STRING"), b => b.MigrationsAssembly("keyzee-migrations-sqlserver"));
                         builder.EnableDetailedErrors();
                         builder.EnableSensitiveDataLogging();
                     });
