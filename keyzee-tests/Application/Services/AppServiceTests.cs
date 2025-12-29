@@ -22,7 +22,7 @@ public class AppServiceTests
         _unitOfWork = Substitute.For<IKeyZeeUnitOfWork>();
         _mockRepo = Substitute.For<IAppRepository>();
         _unitOfWork.AppRepository.Returns(_mockRepo);
-        
+
         _validator = new KeyZee.Application.Validation.AppValidator();
         _systemUnderTest = new AppService(_unitOfWork, _validator);
     }
@@ -35,7 +35,7 @@ public class AppServiceTests
         var appEntity = new App { Id = appId, Name = "Test App" };
 
         // NSubstitute syntax for setting up a return value
-        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(appEntity);
 
         // Act
@@ -58,217 +58,246 @@ public class AppServiceTests
         // Arrange
         var appId = Guid.NewGuid();
 
-        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns((App?)null);
 
         // Act
         var result = await _systemUnderTest.GetByIdAsync(appId);
-        
+
         // Assert
         result.Should().NotBeNull();
         result.Value.Should().BeNull();
         result.IsSuccess.Should().BeFalse();
     }
 
-    /*[Fact]
-    public async Task CreateAppAsync_ShouldCallAddAsync_WhenDtoIsValid()
+    [Fact]
+    public async Task CreateAsync_ShouldCallAddAsync_WhenDtoIsValid()
     {
         // Arrange
         var dto = new AppDto { Name = "NewApp" };
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.FromResult(new App { Id = Guid.NewGuid(), Name = dto.Name }));
 
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
-                 .Returns(new List<App>());
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+                 .Returns([]);
 
         // Act
-        await _systemUnderTest.SaveAppAsync(dto);
+        await _systemUnderTest.CreateAsync(dto);
 
         // Assert
         // Verify that AddOrUpdateAsync was called with an App entity that has the correct Name
         await _mockRepo.Received(1).AddOrUpdateAsync(
             Arg.Is<App>(a => a.Name == "NewApp"),
-            Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+        [Fact]
+    public async Task CreateAsync_ShouldReturnError_WhenAppNameAlreadyExists()
+    {
+        // Arrange
+        var dto = new AppDto { Id = Guid.NewGuid(), Name = "ExistingApp" };
+
+        // Setup repo to return an existing app when searching by name
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+                 .Returns([new() { Id = Guid.NewGuid(), Name = "ExistingApp" }]);
+
+        // Act
+        var result = await _systemUnderTest.CreateAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be($"An application with the name '{dto.Name}' already exists.");
+
+        // Ensure we never touched the DB
+        await _mockRepo.DidNotReceive().AddOrUpdateAsync(
+            Arg.Any<App>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAppAsync_ShouldThrowValidationException_WhenDtoIsInvalid_NameIsRequired()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsRequired()
     {
         // Arrange
         var dto = new AppDto { Name = "" }; // Invalid name
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Name", "Application name is required");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveAppAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<App>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAppAsync_ShouldThrowValidationException_WhenDtoIsInvalid_NameIsTooLong()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsTooLong()
     {
         // Arrange
         var dto = new AppDto { Name = new string('a', 201) }; // long name
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Name", "Application name cannot exceed 200 characters");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveAppAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<App>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAppAsync_ShouldThrowValidationException_WhenDtoIsInvalid_NameContainsInvalidCharacters()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameContainsInvalidCharacters()
     {
         // Arrange
         var dto = new AppDto { Name = "Invalid@Name" }; // name with invalid characters
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Name", "Application name can only contain letters, numbers, underscores, and hyphens");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveAppAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<App>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAppAsync_ShouldThrowException_WhenAppNameAlreadyExists()
+    public async Task UpdateAsync_ShouldReturnError_WhenAppNameAlreadyExists()
     {
         // Arrange
-        var dto = new AppDto { Name = "ExistingApp" };
+        var dto = new AppDto { Id = Guid.NewGuid(), Name = "ExistingApp" };
 
         // Setup repo to return an existing app when searching by name
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
-                 .Returns(new List<App> { new App { Name = "ExistingApp" } });
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+                 .Returns([new() { Id = Guid.NewGuid(), Name = "ExistingApp" }]);
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveAppAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>() // Or your custom DuplicateException
-                 .WithMessage($"An application with the name '{dto.Name}' already exists.");
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be($"An application with the name '{dto.Name}' already exists.");
 
+        // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<App>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteAppByIdAsync_ShouldCallDelete_WhenAppExists()
+    public async Task DeleteByIdAsync_ShouldCallDelete_WhenAppExists()
     {
         // Arrange
         var appId = Guid.NewGuid();
         var app = new App { Id = appId, Name = "AppToDelete" };
 
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(app);
 
-        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.DeleteAsync(Arg.Any<App>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
 
         // Act
-        await _systemUnderTest.DeleteByIdAsync(appId);
+        var result = await _systemUnderTest.DeleteByIdAsync(appId);
 
         // Assert
-        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<App>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteAppByIdAsync_ShouldThrowNotFound_WhenAppDoesNotExist()
+    public async Task DeleteByIdAsync_ShouldThrowNotFound_WhenAppDoesNotExist()
     {
         // Arrange
         var appId = Guid.NewGuid();
 
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns((App?)null);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.DeleteByIdAsync(appId);
+        var result = await _systemUnderTest.DeleteByIdAsync(appId);
 
         // Assert
-        await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("App not found.");
 
-        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<App>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteAppByNameAsync_ShouldCallDelete_WhenAppExists()
+    public async Task DeleteByNameAsync_ShouldCallDelete_WhenAppExists()
     {
         // Arrange
         var appId = Guid.NewGuid();
         var app = new App { Id = appId, Name = "AppToDelete" };
 
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([app]);
 
-        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.DeleteAsync(Arg.Any<App>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
+
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+                 .Returns(app);
 
         // Act
-        await _systemUnderTest.DeleteByNameAsync(app.Name);
+        var result = await _systemUnderTest.DeleteByNameAsync(app.Name);
 
         // Assert
-        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<App>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteAppByNameAsync_ShouldThrowNotFound_WhenAppDoesNotExist()
+    public async Task DeleteByNameAsync_ShouldThrowNotFound_WhenAppDoesNotExist()
     {
         // Arrange
         var appId = Guid.NewGuid();
 
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([]);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.DeleteByNameAsync("NonExistentApp");
+        var result = await _systemUnderTest.DeleteByNameAsync("NonExistentApp");
 
         // Assert
-        await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("App not found.");
 
-        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<App>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveAppAsync_ShouldMapPropertiesCorrectly()
+    public async Task UpdateAsync_ShouldMapPropertiesCorrectly()
     {
         // Arrange
         var dto = new AppDto { Name = "MappedApp" };
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
 
         // Act
-        await _systemUnderTest.SaveAppAsync(dto);
+        await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
         await _mockRepo.Received(1).AddOrUpdateAsync(
-            Arg.Is<App>(a =>
-                a.Name == "MappedApp" && a.Id != Guid.Empty),
-            Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(),
+            Arg.Is<App>(a => a.Name == "MappedApp" && a.Id != Guid.Empty),
             Arg.Any<CancellationToken>());
-    }*/
+    }
 }

@@ -1,6 +1,6 @@
 using System;
 
-namespace keyzee_tests.Infrastructure.Repositories;
+namespace KeyZee.Tests.Infrastructure.Repositories;
 
 public class AppRepositoryTests
 {

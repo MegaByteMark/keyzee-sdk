@@ -1,7 +1,6 @@
 using AwesomeAssertions;
 using FluentValidation;
 using KeyZee.Application.Common.Encryption;
-using KeyZee.Application.Common.Exceptions;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
@@ -27,7 +26,7 @@ public class KeyValuePairServiceTests
     {
         _unitOfWork = Substitute.For<IKeyZeeUnitOfWork>();
         _mockRepo = Substitute.For<IKeyValuePairRepository>();
-         _unitOfWork.KeyValuePairRepository.Returns(_mockRepo);
+        _unitOfWork.KeyValuePairRepository.Returns(_mockRepo);
 
         _validator = new KeyZee.Application.Validation.KeyValuePairValidator();
         _appService = Substitute.For<IAppService>();
@@ -35,8 +34,8 @@ public class KeyValuePairServiceTests
         _systemUnderTest = new KeyValuePairService(_unitOfWork, _appService, _options, _validator, _encryptionService);
     }
 
-    /*[Fact]
-    public async Task GetKeyValuePairByIdAsync_ShouldReturnDto_WhenAppExists()
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnDto_WhenAppExists()
     {
         // Arrange
         var kvpId = Guid.NewGuid();
@@ -47,50 +46,54 @@ public class KeyValuePairServiceTests
         var kvpEntity = new Domain.Models.KeyValuePair { Id = kvpId, Key = "TestKey", EncryptedValue = cipherText, AppId = appId, Application = new App { Id = appId, Name = "TestApp" } };
 
         // NSubstitute syntax for setting up a return value
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(kvpEntity);
 
         // Act
-        var result = await _systemUnderTest.GetKeyValuePairByIdAsync(kvpId);
+        var result = await _systemUnderTest.GetByIdAsync(kvpId);
 
         // Assert
         result.Should().NotBeNull();
-        result.Key.Should().Be("TestKey");
-        result.Value.Should().Be("TestValue");
-        result.AppName.Should().Be("TestApp");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Key.Should().Be("TestKey");
+        result.Value.Value.Should().Be("TestValue");
+        result.Value.AppName.Should().Be("TestApp");
 
         // NSubstitute syntax for verifying a call
-        await _mockRepo.Received(1).GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>());
+        await _mockRepo.Received(1).GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task GetKeyValuePairByIdAsync_ShouldReturnNull_WhenKeyValuePairDoesNotExist()
+    public async Task GetByIdAsync_ShouldReturnNull_WhenKeyValuePairDoesNotExist()
     {
         // Arrange
         var kvpId = Guid.NewGuid();
         var appId = Guid.NewGuid();
 
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns((Domain.Models.KeyValuePair?)null);
 
         // Act
-        var result = await _systemUnderTest.GetKeyValuePairByIdAsync(kvpId);
+        var result = await _systemUnderTest.GetByIdAsync(kvpId);
 
         // Assert
-        result.Should().BeNull();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Value.Should().BeNull();
     }
 
     [Fact]
-    public async Task CreateKeyValuePairAsync_ShouldCallAddAsync_WhenDtoIsValid()
+    public async Task CreateAsync_ShouldCallAddOrUpdateAsync_WhenDtoIsValid()
     {
         // Arrange
         var appId = Guid.NewGuid();
         var appName = "NewApp";
 
-        var dto = new KeyValuePairDto { Key = "NewKey", Value = "NewValue", AppName = appName };
+        var dto = new KeyValuePairDto { Id = Guid.NewGuid(), Key = "NewKey", Value = "NewValue", AppId = appId, AppName = appName };
 
-        _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
 
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([]);
@@ -99,202 +102,238 @@ public class KeyValuePairServiceTests
                    .Returns(new AppDto { Id = appId, Name = appName });
 
         // Act
-        await _systemUnderTest.SaveKeyValuePairAsync(dto);
+        var result = await _systemUnderTest.CreateAsync(dto);
 
         // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+
         // Verify that AddOrUpdateAsync was called with an App entity that has the correct Name
         await _mockRepo.Received(1).AddOrUpdateAsync(
             Arg.Is<Domain.Models.KeyValuePair>(kvp => kvp.Key == "NewKey" && kvp.AppId == appId),
-            Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveKeyValuePairAsync_ShouldThrowValidationException_WhenDtoIsInvalid_NameIsTooLong()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsTooLong()
     {
+        var id = Guid.NewGuid();
+        var appId = Guid.NewGuid();
+
         // Arrange
-        var dto = new KeyValuePairDto { Key = "SomeKey", Value = "SomeValue", AppName = new string('a', 201) }; // long name
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Name", "Application name cannot exceed 200 characters");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
+        var dto = new KeyValuePairDto { Id = id, AppId = appId, Key = "SomeKey", Value = "SomeValue", AppName = new string('a', 201) }; // long name
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveKeyValuePairAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("Application name cannot exceed 200 characters");
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<Domain.Models.KeyValuePair>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveKeyValuePairAsync_ShouldThrowValidationException_WhenDtoIsInvalid_KeyIsRequired()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_KeyIsRequired()
     {
+        var id = Guid.NewGuid();
+        var appId = Guid.NewGuid();
+
         // Arrange
-        var dto = new KeyValuePairDto { Key = "", Value = "SomeValue", AppName = "SomeApp" }; // key is required
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Key", "Key is required");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
+        var dto = new KeyValuePairDto { Id = id, AppId = appId, Key = "", Value = "SomeValue", AppName = "SomeApp" }; // key is required
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveKeyValuePairAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("Key is required");
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<Domain.Models.KeyValuePair>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveKeyValuePairAsync_ShouldThrowValidationException_WhenDtoIsInvalid_KeyIsTooLong()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_KeyIsTooLong()
     {
         // Arrange
-        var dto = new KeyValuePairDto { Key = new string('a', 501), Value = "SomeValue", AppName = "SomeApp" }; // key is too long
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Key", "Key cannot exceed 500 characters");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
+        var id = Guid.NewGuid();
+        var appId = Guid.NewGuid();
+
+        var dto = new KeyValuePairDto { Id = id, AppId = appId, Key = new string('a', 501), Value = "SomeValue", AppName = "SomeApp" }; // key is too long
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveKeyValuePairAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("Key cannot exceed 500 characters");
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<Domain.Models.KeyValuePair>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SaveKeyValuePairAsync_ShouldThrowValidationException_WhenDtoIsInvalid_ValueIsTooLong()
+    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_ValueIsTooLong()
     {
         // Arrange
-        var dto = new KeyValuePairDto { Key = "SomeKey", Value = new string('a', 5001), AppName = "SomeApp" }; // value is too long
-        var validationFailure = new FluentValidation.Results.ValidationFailure("Value", "Value cannot exceed 5000 characters");
-        var validationResult = new FluentValidation.Results.ValidationResult([validationFailure]);
+        var id = Guid.NewGuid();
+        var appId = Guid.NewGuid();
+        var dto = new KeyValuePairDto { Id = id, AppId = appId, Key = "SomeKey", Value = new string('a', 5001), AppName = "SomeApp" }; // value is too long
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.SaveKeyValuePairAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("Value cannot exceed 5000 characters");
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
             Arg.Any<Domain.Models.KeyValuePair>(),
-            Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(),
             Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteKeyValuePairByIdAsync_ShouldCallDelete_WhenKeyValuePairExists()
+    public async Task DeleteAsync_ShouldCallDelete_WhenKeyValuePairExists()
     {
         // Arrange
         var keyValuePairId = Guid.NewGuid();
-        var keyValuePair = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = "EncryptedValue", AppId = Guid.NewGuid() };
+        var model = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = "EncryptedValue", AppId = Guid.NewGuid() };
+        var keyValuePair = new KeyValuePairDto { Id = keyValuePairId, Key = "KeyToDelete", Value = "EncryptedValue", AppId = Guid.NewGuid(), AppName = "SomeApp" };
 
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+                 .Returns(model);
+
+        _mockRepo.DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _systemUnderTest.DeleteAsync(keyValuePair);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnError_WhenKeyValuePairDoesNotExist()
+    {
+        // Arrange
+        var keyValuePairId = Guid.NewGuid();
+        var dto = new KeyValuePairDto { Id = keyValuePairId, Key = "KeyToDelete", Value = "EncryptedValue", AppId = Guid.NewGuid(), AppName = "SomeApp" };
+
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+                 .Returns((Domain.Models.KeyValuePair?)null);
+
+        _mockRepo.DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _systemUnderTest.DeleteAsync(dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("KeyValuePair not found.");
+
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeleteKeyValuePairByAppAndKeyAsync_ShouldCallDelete_WhenKeyValuePairExists()
+    {
+        // Arrange
+        var keyValuePairId = Guid.NewGuid();
+        var encryptedValue = _encryptionService.Encrypt("SomeValue");
+        var keyValuePair = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = encryptedValue, AppId = Guid.NewGuid(), Application = new App { Id = Guid.NewGuid(), Name = "SomeApp" } };
+
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), withIncludes: Arg.Any<bool>(), includeDeleted: Arg.Any<bool>(), asNoTracking: Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+                 .Returns([keyValuePair]);
+
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), withIncludes: Arg.Any<bool>(), asNoTracking: Arg.Any<bool>(), includeDeleted: Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns(keyValuePair);
 
-        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
+
+        _appService.GetByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                   .Returns(new AppDto { Id = keyValuePair.AppId, Name = "SomeApp" });
 
         // Act
-        await _systemUnderTest.DeleteKeyValuePairByIdAsync(keyValuePairId);
+        var result = await _systemUnderTest.DeleteKeyValuePairByAppAndKeyAsync(keyValuePair.Key);
 
         // Assert
-        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+
+        await _mockRepo.Received(1).DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteKeyValuePairByIdAsync_ShouldThrowNotFound_WhenKeyValuePairDoesNotExist()
+    public async Task DeleteKeyValuePairByNameAsync_ShouldReturnError_WhenKeyValuePairDoesNotExist()
     {
         // Arrange
         var keyValuePairId = Guid.NewGuid();
-        var keyValuePair = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = "EncryptedValue", AppId = Guid.NewGuid() };
+        var encryptedValue = _encryptionService.Encrypt("SomeValue");
+        var keyValuePair = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = encryptedValue, AppId = Guid.NewGuid(), Application = new App { Id = Guid.NewGuid(), Name = "SomeApp" } };
 
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
-                 .Returns((Domain.Models.KeyValuePair?)null);
+        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), withIncludes: Arg.Any<bool>(), includeDeleted: Arg.Any<bool>(), asNoTracking: Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+         .Returns([]);
 
-        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), withIncludes: Arg.Any<bool>(), asNoTracking: Arg.Any<bool>(), includeDeleted: Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
+                 .Returns(null as Domain.Models.KeyValuePair);
+
+        _mockRepo.DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>())
+                 .Returns(Task.CompletedTask);
+
+        _appService.GetByNameAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                   .Returns(new AppDto { Id = keyValuePair.AppId, Name = "SomeApp" });
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.DeleteKeyValuePairByIdAsync(keyValuePairId);
+        var result = await _systemUnderTest.DeleteKeyValuePairByAppAndKeyAsync("NonExistentKey");
 
         // Assert
-        await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle().Which.Should().Be("KeyValuePair not found.");
 
-        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
+        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task DeleteKeyValuePairByNameAsync_ShouldCallDelete_WhenKeyValuePairExists()
+    public async Task UpdateAsync_ShouldMapPropertiesCorrectly()
     {
         // Arrange
-        var keyValuePairId = Guid.NewGuid();
-        var keyValuePair = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = "EncryptedValue", AppId = Guid.NewGuid() };
+        Guid appId = Guid.NewGuid();
+        Guid kvpId = Guid.NewGuid();
 
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
-                 .Returns(new List<Domain.Models.KeyValuePair> { keyValuePair });
+        string cipherText = _encryptionService.Encrypt("MappedValue");
 
-        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        var dto = new KeyValuePairDto { AppId = appId, Id = kvpId, Key = "MappedKey", Value = "MappedValue", AppName = "MappedApp" };
 
-        // Act
-        await _systemUnderTest.DeleteKeyValuePairByAppAndKeyAsync(keyValuePair.Key);
-
-        // Assert
-        await _mockRepo.Received(1).DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task DeleteKeyValuePairByNameAsync_ShouldThrowNotFound_WhenKeyValuePairDoesNotExist()
-    {
-        // Arrange
-        var keyValuePairId = Guid.NewGuid();
-        var keyValuePair = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = "EncryptedValue", AppId = Guid.NewGuid() };
-
-        _mockRepo.GetAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>())
-                 .Returns((Domain.Models.KeyValuePair?)null);
-
-        _mockRepo.DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>())
-                 .Returns(ValueTask.CompletedTask);
+        _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>()).Returns(null as Domain.Models.KeyValuePair);
 
         // Act
-        Func<Task> act = async () => await _systemUnderTest.DeleteKeyValuePairByAppAndKeyAsync("NonExistentKey");
-
-        // Assert
-        await act.Should().ThrowAsync<NotFoundException>(); // Or your custom NotFoundException
-
-        await _mockRepo.DidNotReceive().DeleteAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task SaveKeyValuePairAsync_ShouldMapPropertiesCorrectly()
-    {
-        // Arrange
-        IEncryptionService encryptionService = new AesEncryptionService(_options);
-        string cipherText = encryptionService.Encrypt("MappedValue");
-
-        var dto = new KeyValuePairDto { Key = "MappedKey", Value = "MappedValue", AppName = "MappedApp"};
-        _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
-
-        // Act
-        await _systemUnderTest.SaveKeyValuePairAsync(dto);
+        await _systemUnderTest.UpdateAsync(dto);
 
         // Assert
         await _mockRepo.Received(1).AddOrUpdateAsync(
             Arg.Is<Domain.Models.KeyValuePair>(kvp =>
-                kvp.Key == "MappedKey"),
-            Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(),
+                kvp.Key == "MappedKey" && kvp.EncryptedValue == cipherText && kvp.AppId == appId),
             Arg.Any<CancellationToken>());
-    }*/
+    }
 }

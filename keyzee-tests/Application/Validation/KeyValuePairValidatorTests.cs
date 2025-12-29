@@ -1,6 +1,6 @@
 using System;
 
-namespace keyzee_tests.Application.Validation;
+namespace KeyZee.Tests.Application.Validation;
 
 public class KeyValuePairValidatorTests
 {

@@ -206,6 +206,13 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
     {
         var keyValuePair = MapToEntity(entity);
 
+        var existing = await _keyValuePairRepository.GetByIdAsync(keyValuePair.Id, withIncludes: false, asNoTracking: false, includeDeleted: false, cancellationToken: cancellationToken);
+        
+        if (existing == null)
+        {
+            return Result.Failure(["KeyValuePair not found."]);
+        }
+
         return await _keyValuePairRepository.DeleteAsync(keyValuePair, cancellationToken).ContinueWith(async task =>
         {
             if (task.IsFaulted)

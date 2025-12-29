@@ -1,6 +1,6 @@
 using System;
 
-namespace keyzee_tests.Infrastructure;
+namespace KeyZee.Tests.Infrastructure;
 
 public class OptionsBuilderTests
 {

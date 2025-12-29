@@ -241,6 +241,23 @@ public sealed class AppService : GuidValidatableDataService<App, AppDto>, IAppSe
                 app.Id = Guid.NewGuid();
             }
         }
+        else
+        {
+            //Check to see if another app with this name exists, this maintains our unique constraint on name.
+            var existingAppResult = await GetByNameWithSoftDeletedAsync(app.Name, cancellationToken);
+
+            if (!existingAppResult.IsSuccess)
+            {
+                return Result.Failure(existingAppResult.Errors);
+            }
+
+            var existingApp = existingAppResult.Value;
+
+            if (existingApp is not null && existingApp.Id != app.Id)
+            {
+                return Result.Failure($"An application with the name '{app.Name}' already exists.");
+            }
+        }
 
         return await _appRepository.AddOrUpdateAsync(app, cancellationToken)
             .ContinueWith(async task =>
