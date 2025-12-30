@@ -13,34 +13,34 @@ public class AppValidatorTests
     }
 
     [Fact]
-    public void Validate_ValidAppDto_NoValidationErrors()
+    public void Validate_ValidApp_NoValidationErrors()
     {
         // Arrange
-        var appDto = new AppDto
+        var App = new Domain.Models.App
         {
             Name = "ValidAppName",
             Id = Guid.NewGuid()
         };
 
         // Act
-        var result = _validator.Validate(appDto);
+        var result = _validator.Validate(App);
 
         // Assert
         Assert.True(result.IsValid);
     }
 
     [Fact]
-    public void Validate_InvalidAppDto_ReturnsValidationErrorsIfNameIsBlank()
+    public void Validate_InvalidApp_ReturnsValidationErrorsIfNameIsBlank()
     {
         // Arrange
-        var appDto = new AppDto
+        var App = new Domain.Models.App
         {
             Name = "", // Invalid: Name is required
             Id = Guid.NewGuid()
         };
 
         // Act
-        var result = _validator.Validate(appDto);
+        var result = _validator.Validate(App);
 
         // Assert
         Assert.False(result.IsValid);
@@ -48,17 +48,17 @@ public class AppValidatorTests
     }
 
     [Fact]
-    public void Validate_InvalidAppDto_ReturnsValidationErrorsIfNameTooLong()
+    public void Validate_InvalidApp_ReturnsValidationErrorsIfNameTooLong()
     {
         // Arrange
-        var appDto = new AppDto
+        var App = new Domain.Models.App
         {
             Name = new string('A', 256), // Invalid: Name exceeds max length
             Id = Guid.NewGuid()
         };
 
         // Act
-        var result = _validator.Validate(appDto);
+        var result = _validator.Validate(App);
 
         // Assert
         Assert.False(result.IsValid);
@@ -66,17 +66,17 @@ public class AppValidatorTests
     }
 
     [Fact]
-    public void Validate_InvalidAppDto_ReturnsValidationErrorsIfNameHasInvalidCharacters()
+    public void Validate_InvalidApp_ReturnsValidationErrorsIfNameHasInvalidCharacters()
     {
         // Arrange
-        var appDto = new AppDto
+        var App = new Domain.Models.App
         {
             Name = "Invalid@Name!", // Invalid: Name contains special characters
             Id = Guid.NewGuid()
         };
 
         // Act
-        var result = _validator.Validate(appDto);
+        var result = _validator.Validate(App);
 
         // Assert
         Assert.False(result.IsValid);
@@ -84,17 +84,17 @@ public class AppValidatorTests
     }
 
     [Fact]
-    public void Validate_InvalidAppDto_ReturnsMultipleValidationErrors()
+    public void Validate_InvalidApp_ReturnsMultipleValidationErrors()
     {
         // Arrange
-        var appDto = new AppDto
+        var App = new Domain.Models.App
         {
             Name = new string('@', 256), // Invalid: Too long and has invalid characters
             Id = Guid.NewGuid()
         };
 
         // Act
-        var result = _validator.Validate(appDto);
+        var result = _validator.Validate(App);
 
         // Assert
         Assert.False(result.IsValid);

@@ -5,6 +5,7 @@ using KeyZee.Application.Common.Services;
 using KeyZee.Application.Dtos;
 using KeyZee.Application.Services;
 using KeyZee.Application.Validation;
+using KeyZee.Domain.Models;
 using KeyZee.Infrastructure.DbContext;
 using KeyZee.Infrastructure.Encryption;
 using KeyZee.Infrastructure.Options;
@@ -62,8 +63,8 @@ public static class DependencyInjectionExtensions
     /// <returns>The updated IServiceCollection.</returns>
     private static IServiceCollection AddValidators(this IServiceCollection services)
     {
-        services.AddScoped<IValidator<AppDto>, AppValidator>();
-        services.AddScoped<IValidator<KeyValuePairDto>, KeyValuePairValidator>();
+        services.AddScoped<IValidator<App>, AppValidator>();
+        services.AddScoped<IValidator<Domain.Models.KeyValuePair>, KeyValuePairValidator>();
 
         return services;
     }

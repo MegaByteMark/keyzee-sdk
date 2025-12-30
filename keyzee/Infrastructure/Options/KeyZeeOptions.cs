@@ -21,7 +21,7 @@ public sealed class KeyZeeOptions
     /// <summary>
     /// Default constructor for KeyZeeOptions, the executing assembly name is used as the AppName, the encryption key and secret are not set and need to be initialized later.
     /// </summary>
-    internal KeyZeeOptions()
+    public KeyZeeOptions()
     {
         DbContextOptionsBuilder = _ => { };
         EncryptionKey = string.Empty;

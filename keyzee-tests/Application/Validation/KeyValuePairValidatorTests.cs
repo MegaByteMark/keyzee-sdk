@@ -1,11 +1,19 @@
-using KeyZee.Application.Dtos;
+using KeyZee.Application.Common.Encryption;
 using KeyZee.Application.Validation;
+using KeyZee.Infrastructure.Encryption;
 
 namespace KeyZee.Tests.Application.Validation;
 
 public class KeyValuePairValidatorTests
 {
     private readonly KeyValuePairValidator _validator;
+    private readonly IEncryptionService _encryptionService = new AesEncryptionService(new KeyZee.Infrastructure.Options.KeyZeeOptions()
+    {
+        EncryptionKey = "12345678901234567890123456789012",
+        EncryptionSecret = "1234567890123456",
+        AppName = "KeyZeeTests",
+        DbContextOptionsBuilder = _ => { }
+    });
 
     public KeyValuePairValidatorTests()
     {
@@ -16,13 +24,14 @@ public class KeyValuePairValidatorTests
     public void Validate_ValidKeyValuePairDto_ReturnsNoErrors()
     {
         //Arrange
-        var dto = new KeyValuePairDto
+        var cipherText = _encryptionService.Encrypt("ValidValue");
+
+        var dto = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
-            AppName = "ValidApp",
             Key = "ValidKey",
-            Value = "ValidValue",
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            EncryptedValue = cipherText,
         };
 
         //Act
@@ -36,13 +45,14 @@ public class KeyValuePairValidatorTests
     public void Validate_EmptyAppName_ReturnsError()
     {
         //Arrange
-        var dto = new KeyValuePairDto
+        var cipherText = _encryptionService.Encrypt("ValidValue");
+
+        var dto = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
-            AppName = "",
             Key = "ValidKey",
-            Value = "ValidValue",
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            EncryptedValue = cipherText
         };
 
         //Act
@@ -58,14 +68,14 @@ public class KeyValuePairValidatorTests
     {
         //Arrange
         var longKey = new string('K', 501);
+        var cipherText = _encryptionService.Encrypt("ValidValue");
 
-        var dto = new KeyValuePairDto
+        var dto = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
-            AppName = "ValidApp",
             Key = longKey,
-            Value = "ValidValue",
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            EncryptedValue = cipherText
         };
 
         //Act
@@ -81,14 +91,14 @@ public class KeyValuePairValidatorTests
     {
         //Arrange
         var longValue = new string('V', 5001);
+        var cipherText = _encryptionService.Encrypt(longValue);
 
-        var dto = new KeyValuePairDto
+        var dto = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
-            AppName = "ValidApp",
             Key = "ValidKey",
-            Value = longValue,
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            EncryptedValue = cipherText
         };
 
         //Act
@@ -103,13 +113,14 @@ public class KeyValuePairValidatorTests
     public void Validate_EmptyKey_ReturnsError()
     {
         //Arrange
-        var dto = new KeyValuePairDto
+        var cipherText = _encryptionService.Encrypt("ValidValue");
+
+        var dto = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
-            AppName = "ValidApp",
             Key = "",
-            Value = "ValidValue",
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            EncryptedValue = cipherText
         };
 
         //Act
@@ -125,14 +136,14 @@ public class KeyValuePairValidatorTests
     {
         //Arrange
         var longAppName = new string('A', 201);
+        var cipherText = _encryptionService.Encrypt("ValidValue");
 
-        var dto = new KeyValuePairDto
+        var dto = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
-            AppName = longAppName,
             Key = "ValidKey",
-            Value = "ValidValue",
-            Id = Guid.NewGuid()
+            Id = Guid.NewGuid(),
+            EncryptedValue = cipherText,
         };
 
         //Act
