@@ -22,6 +22,8 @@ public class AesEncryptionService : IEncryptionService
     /// <returns>The encrypted text as a base64 string.</returns>
     public string Encrypt(string plainText)
     {
+        ArgumentNullException.ThrowIfNull(plainText);
+
         return Encrypt(plainText, _options.EncryptionKey, _options.EncryptionSecret);
     }
 
@@ -34,6 +36,10 @@ public class AesEncryptionService : IEncryptionService
     /// <returns>The encrypted text as a base64 string.</returns>
     public string Encrypt(string plainText, string key, string secret)
     {
+        ArgumentNullException.ThrowIfNull(plainText);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(secret);
+
         using var aes = System.Security.Cryptography.Aes.Create();
 
         aes.Key = System.Text.Encoding.UTF8.GetBytes(key);
@@ -58,7 +64,9 @@ public class AesEncryptionService : IEncryptionService
     /// <returns>The decrypted plain text.</returns>
     public string Decrypt(string cipherText)
     {
-        return Decrypt(cipherText, _options.EncryptionKey,  _options.EncryptionSecret);
+        ArgumentNullException.ThrowIfNull(cipherText);
+
+        return Decrypt(cipherText, _options.EncryptionKey, _options.EncryptionSecret);
     }
 
     /// <summary>
@@ -70,6 +78,10 @@ public class AesEncryptionService : IEncryptionService
     /// <returns>The decrypted plain text.</returns>
     public string Decrypt(string cipherText, string key, string secret)
     {
+        ArgumentNullException.ThrowIfNull(cipherText);
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(secret);
+        
         using var aes = System.Security.Cryptography.Aes.Create();
 
         aes.Key = System.Text.Encoding.UTF8.GetBytes(key);
