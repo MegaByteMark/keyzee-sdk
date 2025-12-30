@@ -1,11 +1,13 @@
-using IntraDotNet.CleanArchitecture.Infrastructure.Extensions;
+using IntraDotNet.CleanArchitecture.Application.Common.Services;
+using IntraDotNet.CleanArchitecture.Infrastructure.EFCore.DbContext;
+using IntraDotNet.CleanArchitecture.Infrastructure.EFCore.Extensions;
 
 namespace KeyZee.Infrastructure.DbContext;
 
 /// <summary>
 /// The KeyZee database context.
 /// </summary>
-public sealed class KeyZeeDbContext : Microsoft.EntityFrameworkCore.DbContext
+public sealed class KeyZeeDbContext : AuditableDbContext
 {
     /// <summary>
     /// The KeyValuePairs DbSet.
@@ -17,8 +19,8 @@ public sealed class KeyZeeDbContext : Microsoft.EntityFrameworkCore.DbContext
     /// </summary>
     internal Microsoft.EntityFrameworkCore.DbSet<Domain.Models.App> Apps { get; set; }
 
-    public KeyZeeDbContext(Microsoft.EntityFrameworkCore.DbContextOptions options)
-       : base(options)
+    public KeyZeeDbContext(Microsoft.EntityFrameworkCore.DbContextOptions options, ICurrentUserService? currentUserService = null)
+       : base(options, currentUserService)
     {
     }
 

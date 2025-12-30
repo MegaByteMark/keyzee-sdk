@@ -1,4 +1,4 @@
-using IntraDotNet.CleanArchitecture.Infrastructure;
+using IntraDotNet.CleanArchitecture.Infrastructure.EFCore.Persistence;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Infrastructure.DbContext;
 using KeyZee.Infrastructure.Repositories;

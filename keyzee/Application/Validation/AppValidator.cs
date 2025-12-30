@@ -1,12 +1,12 @@
 using FluentValidation;
-using KeyZee.Application.Dtos;
+using KeyZee.Domain.Models;
 
 namespace KeyZee.Application.Validation;
 
 /// <summary>
-/// Validator for AppDto.
+/// Validator for App.
 /// </summary>
-public sealed class AppValidator : AbstractValidator<AppDto>
+public sealed class AppValidator : AbstractValidator<App>
 {
     public AppValidator()
     {

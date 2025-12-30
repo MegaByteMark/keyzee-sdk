@@ -15,7 +15,7 @@ public class AppServiceTests
     private readonly IKeyZeeUnitOfWork _unitOfWork;
     private readonly IAppRepository _mockRepo;
     private readonly IAppService _systemUnderTest; // System Under Test
-    private readonly IValidator<AppDto> _validator;
+    private readonly IValidator<App> _validator;
 
     public AppServiceTests()
     {
@@ -74,7 +74,7 @@ public class AppServiceTests
     public async Task CreateAsync_ShouldCallAddAsync_WhenDtoIsValid()
     {
         // Arrange
-        var dto = new AppDto { Name = "NewApp" };
+        var dto = new App { Name = "NewApp" };
 
         _mockRepo.AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<CancellationToken>())
                  .Returns(Task.FromResult(new App { Id = Guid.NewGuid(), Name = dto.Name }));
@@ -96,7 +96,7 @@ public class AppServiceTests
     public async Task CreateAsync_ShouldReturnError_WhenAppNameAlreadyExists()
     {
         // Arrange
-        var dto = new AppDto { Id = Guid.NewGuid(), Name = "ExistingApp" };
+        var dto = new App { Id = Guid.NewGuid(), Name = "ExistingApp" };
 
         // Setup repo to return an existing app when searching by name
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
@@ -120,7 +120,7 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsRequired()
     {
         // Arrange
-        var dto = new AppDto { Name = "" }; // Invalid name
+        var dto = new App { Name = "" }; // Invalid name
 
         // Act
         var result = await _systemUnderTest.UpdateAsync(dto);
@@ -139,7 +139,7 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsTooLong()
     {
         // Arrange
-        var dto = new AppDto { Name = new string('a', 201) }; // long name
+        var dto = new App { Name = new string('a', 201) }; // long name
 
         // Act
         var result = await _systemUnderTest.UpdateAsync(dto);
@@ -158,7 +158,7 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameContainsInvalidCharacters()
     {
         // Arrange
-        var dto = new AppDto { Name = "Invalid@Name" }; // name with invalid characters
+        var dto = new App { Name = "Invalid@Name" }; // name with invalid characters
 
         // Act
         var result = await _systemUnderTest.UpdateAsync(dto);
@@ -177,7 +177,7 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldReturnError_WhenAppNameAlreadyExists()
     {
         // Arrange
-        var dto = new AppDto { Id = Guid.NewGuid(), Name = "ExistingApp" };
+        var dto = new App { Id = Guid.NewGuid(), Name = "ExistingApp" };
 
         // Setup repo to return an existing app when searching by name
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
@@ -289,7 +289,7 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldMapPropertiesCorrectly()
     {
         // Arrange
-        var dto = new AppDto { Name = "MappedApp" };
+        var dto = new App { Name = "MappedApp" };
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
 
         // Act
