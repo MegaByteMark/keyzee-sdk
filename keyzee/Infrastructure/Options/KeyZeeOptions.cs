@@ -7,15 +7,15 @@ namespace KeyZee.Infrastructure.Options;
 public sealed class KeyZeeOptions
 {
     [JsonIgnore]
-    internal Action<DbContextOptionsBuilder> OptionsBuilder { get; set; }
+    public Action<DbContextOptionsBuilder> DbContextOptionsBuilder { get; set; }
     //Protect aginst accidental serialization
     [JsonIgnore]
     [XmlIgnore]
-    internal string EncryptionKey { get; set; }
+    public string EncryptionKey { get; set; }
     //Protect aginst accidental serialization
     [JsonIgnore]
     [XmlIgnore]
-    internal string EncryptionSecret { get; set; }
+    public string EncryptionSecret { get; set; }
     public string AppName { get; set; }
 
     /// <summary>
@@ -23,7 +23,7 @@ public sealed class KeyZeeOptions
     /// </summary>
     internal KeyZeeOptions()
     {
-        OptionsBuilder = _ => { };
+        DbContextOptionsBuilder = _ => { };
         EncryptionKey = string.Empty;
         EncryptionSecret = string.Empty;
         AppName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name ?? "Undefined";
@@ -38,7 +38,7 @@ public sealed class KeyZeeOptions
     /// <param name="appName">The name of the application.</param>
     public KeyZeeOptions(Action<DbContextOptionsBuilder> options, string encryptionKey, string encryptionSecret, string appName)
     {
-        OptionsBuilder = options;
+        DbContextOptionsBuilder = options;
         EncryptionKey = encryptionKey;
         EncryptionSecret = encryptionSecret;
         AppName = appName;

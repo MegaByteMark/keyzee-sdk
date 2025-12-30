@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <Folder Include="Application/Validation/" />
+    <Folder Include="Infrastructure/Encryption/" />
     <Folder Include="Infrastructure/Repositories/" />
   </ItemGroup>
 

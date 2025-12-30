@@ -35,7 +35,7 @@ public static class DependencyInjectionExtensions
             throw new InvalidOperationException("Encryption key and secret must be provided from environment variables.");
         }
 
-        services.AddDbContextFactory<KeyZeeDbContext>(kzOptions.OptionsBuilder);
+        services.AddDbContextFactory<KeyZeeDbContext>(kzOptions.DbContextOptionsBuilder);
 
         services.AddValidators();
         services.AddRepositories();
