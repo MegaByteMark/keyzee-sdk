@@ -100,7 +100,9 @@ Or add to your `.csproj` file:
 ### Basic Setup
 
 #### 1. Configure Services in ASP.NET Core
-**IMPORTANT**: It is strongly recommended to keep sensitive information out of configuration files and ensure they are no commited to version control. One way to achieve this is to use `.env` files for local development with packages like [dotenv.net](https://github.com/bolorundurowb/dotenv.net) and platform based environment variables in Production scenarios. 
+**IMPORTANT**: It is strongly recommended to keep sensitive information out of configuration files and ensure they are not commited to version control. 
+
+One way to achieve this is to use `.env` files for local development with packages like [dotenv.net](https://github.com/bolorundurowb/dotenv.net) and platform based environment variables in Production scenarios. 
 
 ```csharp
 using KeyZee.DependencyInjection;
@@ -109,7 +111,7 @@ using dotenv.net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Load Environment Variables from .env file for local development, make sure .env is not commited to version control.
+//Load Environment Variables from .env file for local development, make sure .env is not committed to version control.
 DotEnv.Load();
 
 // Add KeyZee services
@@ -176,13 +178,13 @@ KeyZee provides pre-built migration bundles for common database providers. Downl
 ```bash
 # Download the migration bundle for your database provider
 # SQL Server
-wget https://github.com/MegaByteMark/keyzee-sdk/releases/download/v1.0.0/keyzee-sqlserver-bundle
+wget https://github.com/MegaByteMark/keyzee-sdk/releases/download/v1.0.0/keyzee-sqlserver-osx-arm64
 
 # Make it executable (Linux/Mac)
-chmod +x keyzee-sqlserver-bundle
+chmod +x keyzee-sqlserver-osx-arm64
 
 # Run migrations
-./keyzee-sqlserver-bundle --connection "Server=localhost;Database=KeyZeeStore;..."
+./keyzee-sqlserver-osx-arm64 --connection "Server=localhost;Database=KeyZeeStore;..."
 ```
 
 Or build your own bundle from the KeyZee.Migrations project:
@@ -240,7 +242,7 @@ dotnet ef migrations script --context KeyZeeDbContext --output keyzee-migration.
 
 **Creating Your Own Migration Bundle**
 
-If you want to create a migration bundle with your own customizations:
+If you want to create a migration bundle with your own customisations:
 
 ```bash
 # In your consuming application
@@ -347,6 +349,7 @@ var encryptionService = serviceProvider.GetRequiredService<IEncryptionService>()
 
 // Create an application
 var appResult = await appService.GetByNameAsync("MyConsoleApp");
+
 if (appResult.Value == null)
 {
     var app = new KeyZee.Domain.Models.App { Name = "MyConsoleApp" };
@@ -356,6 +359,7 @@ if (appResult.Value == null)
 
 // Store an encrypted value
 var encryptedValue = encryptionService.Encrypt("SuperSecretPassword123!");
+
 var kvp = new KeyZee.Domain.Models.KeyValuePair
 {
     AppId = appResult.Value!.Id,
@@ -364,6 +368,7 @@ var kvp = new KeyZee.Domain.Models.KeyValuePair
 };
 
 var createResult = await kvpService.CreateAsync(kvp);
+
 if (createResult.IsSuccess)
 {
     Console.WriteLine("Secret stored successfully!");
@@ -371,6 +376,7 @@ if (createResult.IsSuccess)
 
 // Retrieve and decrypt a value
 var getResult = await kvpService.GetKeyValuePairByAppAndKeyAsync("MyConsoleApp", "DatabasePassword");
+
 if (getResult.IsSuccess && getResult.Value != null)
 {
     var decryptedValue = encryptionService.Decrypt(getResult.Value.EncryptedValue);
@@ -379,6 +385,7 @@ if (getResult.IsSuccess && getResult.Value != null)
 
 // List all keys for an app
 var listResult = await kvpService.GetKeyValuePairsByAppAsync("MyConsoleApp");
+
 if (listResult.IsSuccess)
 {
     Console.WriteLine("All keys:");
@@ -391,8 +398,8 @@ if (listResult.IsSuccess)
 // Migrate to new encryption keys (re-encrypt all data)
 var migrateResult = await kvpService.MigrateByAppAsync(
     "MyConsoleApp",
-    "new-encryption-key-base64",
-    "new-encryption-secret-base64"
+    "new-encryption-key-32chars",
+    "new-encryption-secret-16chars"
 );
 
 if (migrateResult.IsSuccess)
@@ -402,36 +409,10 @@ if (migrateResult.IsSuccess)
 
 // Delete a key-value pair
 var deleteResult = await kvpService.DeleteKeyValuePairByAppAndKeyAsync("MyConsoleApp", "DatabasePassword");
+
 if (deleteResult.IsSuccess)
 {
     Console.WriteLine("Secret deleted!");
-}
-```
-
-### Advanced: Custom Repository Implementation
-
-```csharp
-// Implement custom repository logic
-public class CustomKeyValuePairRepository : Repository<KeyValuePair>, IKeyValuePairRepository
-{
-    public CustomKeyValuePairRepository(KeyZeeDbContext context) : base(context)
-    {
-    }
-
-    public async Task<KeyValuePair?> GetByAppAndKeyAsync(int appId, string key)
-    {
-        return await _context.KeyValuePairs
-            .Where(kvp => kvp.AppId == appId && kvp.Key == key && !kvp.IsDeleted)
-            .FirstOrDefaultAsync();
-    }
-
-    // Add custom methods as needed
-    public async Task<IEnumerable<KeyValuePair>> GetExpiredSecretsAsync(DateTime cutoffDate)
-    {
-        return await _context.KeyValuePairs
-            .Where(kvp => kvp.CreatedAt < cutoffDate && !kvp.IsDeleted)
-            .ToListAsync();
-    }
 }
 ```
 
@@ -459,7 +440,5 @@ Console.WriteLine($"API Key: {decryptedValue}");
 ```
 
 ## See Also
-- [Domain Layer Documentation](../intradotnet-cleanarchitecture-domain/README.md)
-- [Application Layer Documentation](../intradotnet-cleanarchitecture-application/README.md)
 - [KeyZee CLI Tool](https://github.com/MegaByteMark/keyzee-cli) - Command-line interface for KeyZee
 - [Clean Architecture Principles](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
