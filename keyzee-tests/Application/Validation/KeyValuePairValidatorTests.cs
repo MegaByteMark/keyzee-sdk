@@ -21,12 +21,12 @@ public class KeyValuePairValidatorTests
     }
 
     [Fact]
-    public void Validate_ValidKeyValuePairDto_ReturnsNoErrors()
+    public void Validate_ValidKeyValuePair_ReturnsNoErrors()
     {
         //Arrange
         var cipherText = _encryptionService.Encrypt("ValidValue");
 
-        var dto = new Domain.Models.KeyValuePair
+        var kvp = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
             Key = "ValidKey",
@@ -35,32 +35,32 @@ public class KeyValuePairValidatorTests
         };
 
         //Act
-        var result = _validator.Validate(dto);
+        var result = _validator.Validate(kvp);
 
         //Assert
         Assert.True(result.IsValid);
     }
 
     [Fact]
-    public void Validate_EmptyAppName_ReturnsError()
+    public void Validate_EmptyAppId_ReturnsError()
     {
         //Arrange
         var cipherText = _encryptionService.Encrypt("ValidValue");
 
-        var dto = new Domain.Models.KeyValuePair
+        var kvp = new Domain.Models.KeyValuePair
         {
-            AppId = Guid.NewGuid(),
+            AppId = Guid.Empty,
             Key = "ValidKey",
             Id = Guid.NewGuid(),
             EncryptedValue = cipherText
         };
 
         //Act
-        var result = _validator.Validate(dto);
+        var result = _validator.Validate(kvp);
 
         //Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "AppName" && e.ErrorMessage == "Application name is required");
+        Assert.Contains(result.Errors, e => e.PropertyName == "AppId" && e.ErrorMessage == "Application ID is required");
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class KeyValuePairValidatorTests
         var longKey = new string('K', 501);
         var cipherText = _encryptionService.Encrypt("ValidValue");
 
-        var dto = new Domain.Models.KeyValuePair
+        var kvp = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
             Key = longKey,
@@ -79,7 +79,7 @@ public class KeyValuePairValidatorTests
         };
 
         //Act
-        var result = _validator.Validate(dto);
+        var result = _validator.Validate(kvp);
 
         //Assert
         Assert.False(result.IsValid);
@@ -93,7 +93,7 @@ public class KeyValuePairValidatorTests
         var longValue = new string('V', 5001);
         var cipherText = _encryptionService.Encrypt(longValue);
 
-        var dto = new Domain.Models.KeyValuePair
+        var kvp = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
             Key = "ValidKey",
@@ -102,11 +102,11 @@ public class KeyValuePairValidatorTests
         };
 
         //Act
-        var result = _validator.Validate(dto);
+        var result = _validator.Validate(kvp);
 
         //Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "Value" && e.ErrorMessage == "Value cannot exceed 5000 characters");
+        Assert.Contains(result.Errors, e => e.PropertyName == "EncryptedValue" && e.ErrorMessage == "Value cannot exceed 5000 characters");
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class KeyValuePairValidatorTests
         //Arrange
         var cipherText = _encryptionService.Encrypt("ValidValue");
 
-        var dto = new Domain.Models.KeyValuePair
+        var kvp = new Domain.Models.KeyValuePair
         {
             AppId = Guid.NewGuid(),
             Key = "",
@@ -124,33 +124,10 @@ public class KeyValuePairValidatorTests
         };
 
         //Act
-        var result = _validator.Validate(dto);
+        var result = _validator.Validate(kvp);
 
         //Assert
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.PropertyName == "Key" && e.ErrorMessage == "Key is required");
-    }
-
-    [Fact]
-    public void Validate_AppNameExceedsMaxLength_ReturnsError()
-    {
-        //Arrange
-        var longAppName = new string('A', 201);
-        var cipherText = _encryptionService.Encrypt("ValidValue");
-
-        var dto = new Domain.Models.KeyValuePair
-        {
-            AppId = Guid.NewGuid(),
-            Key = "ValidKey",
-            Id = Guid.NewGuid(),
-            EncryptedValue = cipherText,
-        };
-
-        //Act
-        var result = _validator.Validate(dto);
-
-        //Assert
-        Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "AppName" && e.ErrorMessage == "Application name cannot exceed 200 characters");
     }
 }

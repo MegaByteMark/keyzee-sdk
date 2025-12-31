@@ -4,7 +4,6 @@ using IntraDotNet.CleanArchitecture.Application.Results;
 using IntraDotNet.CleanArchitecture.Application.Services;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
-using KeyZee.Application.Dtos;
 using KeyZee.Domain.Models;
 
 namespace KeyZee.Application.Services;

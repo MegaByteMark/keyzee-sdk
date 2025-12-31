@@ -3,7 +3,6 @@ using FluentValidation;
 using KeyZee.Application.Common.Encryption;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
-using KeyZee.Application.Dtos;
 using KeyZee.Application.Services;
 using KeyZee.Domain.Models;
 using KeyZee.Infrastructure.Encryption;
@@ -92,7 +91,7 @@ public class KeyValuePairServiceTests
 
         var cipherText = _encryptionService.Encrypt("NewValue");
 
-        var dto = new Domain.Models.KeyValuePair { Id = Guid.NewGuid(), Key = "NewKey", EncryptedValue = cipherText, AppId = appId };
+        var kvp = new Domain.Models.KeyValuePair { Id = Guid.NewGuid(), Key = "NewKey", EncryptedValue = cipherText, AppId = appId };
 
         _mockRepo.AddOrUpdateAsync(Arg.Any<Domain.Models.KeyValuePair>(), Arg.Any<CancellationToken>())
                  .Returns(Task.CompletedTask);
@@ -104,7 +103,7 @@ public class KeyValuePairServiceTests
                    .Returns(new App { Id = appId, Name = appName });
 
         // Act
-        var result = await _systemUnderTest.CreateAsync(dto);
+        var result = await _systemUnderTest.CreateAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();
@@ -125,10 +124,10 @@ public class KeyValuePairServiceTests
         var cipherText = _encryptionService.Encrypt("SomeValue");
 
         // Arrange
-        var dto = new Domain.Models.KeyValuePair { Id = id, AppId = appId, Key = "", EncryptedValue = cipherText }; // key is required
+        var kvp = new Domain.Models.KeyValuePair { Id = id, AppId = appId, Key = "", EncryptedValue = cipherText }; // key is required
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();
@@ -150,10 +149,10 @@ public class KeyValuePairServiceTests
 
         var cipherText = _encryptionService.Encrypt("SomeValue");
 
-        var dto = new Domain.Models.KeyValuePair { Id = id, AppId = appId, Key = new string('a', 501), EncryptedValue = cipherText }; // key is too long
+        var kvp = new Domain.Models.KeyValuePair { Id = id, AppId = appId, Key = new string('a', 501), EncryptedValue = cipherText }; // key is too long
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();
@@ -173,10 +172,10 @@ public class KeyValuePairServiceTests
         var id = Guid.NewGuid();
         var appId = Guid.NewGuid();
         var cipherText = _encryptionService.Encrypt(new string('a', 5001));
-        var dto = new Domain.Models.KeyValuePair { Id = id, AppId = appId, Key = "SomeKey", EncryptedValue = cipherText }; // value is too long
+        var kvp = new Domain.Models.KeyValuePair { Id = id, AppId = appId, Key = "SomeKey", EncryptedValue = cipherText }; // value is too long
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();
@@ -220,7 +219,7 @@ public class KeyValuePairServiceTests
         // Arrange
         var keyValuePairId = Guid.NewGuid();
         var cipherText = _encryptionService.Encrypt("SomeValue");
-        var dto = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = cipherText, AppId = Guid.NewGuid() };
+        var kvp = new Domain.Models.KeyValuePair { Id = keyValuePairId, Key = "KeyToDelete", EncryptedValue = cipherText, AppId = Guid.NewGuid() };
 
         _mockRepo.GetByIdAsync(Arg.Any<Guid>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
                  .Returns((Domain.Models.KeyValuePair?)null);
@@ -229,7 +228,7 @@ public class KeyValuePairServiceTests
                  .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _systemUnderTest.DeleteAsync(dto);
+        var result = await _systemUnderTest.DeleteAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();
@@ -309,12 +308,12 @@ public class KeyValuePairServiceTests
 
         string cipherText = _encryptionService.Encrypt("MappedValue");
 
-        var dto = new Domain.Models.KeyValuePair { AppId = appId, Id = kvpId, Key = "MappedKey", EncryptedValue = cipherText };
+        var kvp = new Domain.Models.KeyValuePair { AppId = appId, Id = kvpId, Key = "MappedKey", EncryptedValue = cipherText };
 
         _mockRepo.GetByIdAsync(Arg.Any<Guid>(), cancellationToken: Arg.Any<CancellationToken>()).Returns(null as Domain.Models.KeyValuePair);
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();
@@ -335,13 +334,13 @@ public class KeyValuePairServiceTests
 
         string cipherText = _encryptionService.Encrypt("MappedValue");
 
-        var dto = new Domain.Models.KeyValuePair { AppId = appId, Id = kvpId, Key = "MappedKey", EncryptedValue = cipherText };
+        var kvp = new Domain.Models.KeyValuePair { AppId = appId, Id = kvpId, Key = "MappedKey", EncryptedValue = cipherText };
 
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<Domain.Models.KeyValuePair, bool>>>(), withIncludes: Arg.Any<bool>(), includeDeleted: Arg.Any<bool>(), asNoTracking: Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns([new Domain.Models.KeyValuePair { Id = Guid.NewGuid(), Key = "MappedKey", EncryptedValue = cipherText, AppId = appId }]);
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(kvp);
 
         // Assert
         result.Should().NotBeNull();

@@ -1,9 +1,7 @@
 using AwesomeAssertions;
 using FluentValidation;
-using KeyZee.Application.Common.Exceptions;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
-using KeyZee.Application.Dtos;
 using KeyZee.Application.Services;
 using KeyZee.Domain.Models;
 using NSubstitute;
@@ -28,7 +26,7 @@ public class AppServiceTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_ShouldReturnDto_WhenAppExists()
+    public async Task GetByIdAsync_ShouldReturnApp_WhenAppExists()
     {
         // Arrange
         var appId = Guid.NewGuid();
@@ -71,19 +69,19 @@ public class AppServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldCallAddAsync_WhenDtoIsValid()
+    public async Task CreateAsync_ShouldCallAddAsync_WhenAppIsValid()
     {
         // Arrange
-        var dto = new App { Name = "NewApp" };
+        var app = new App { Name = "NewApp" };
 
         _mockRepo.AddOrUpdateAsync(Arg.Any<App>(), Arg.Any<CancellationToken>())
-                 .Returns(Task.FromResult(new App { Id = Guid.NewGuid(), Name = dto.Name }));
+                 .Returns(Task.FromResult(new App { Id = Guid.NewGuid(), Name = app.Name }));
 
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([]);
 
         // Act
-        await _systemUnderTest.CreateAsync(dto);
+        await _systemUnderTest.CreateAsync(app);
 
         // Assert
         // Verify that AddOrUpdateAsync was called with an App entity that has the correct Name
@@ -96,19 +94,19 @@ public class AppServiceTests
     public async Task CreateAsync_ShouldReturnError_WhenAppNameAlreadyExists()
     {
         // Arrange
-        var dto = new App { Id = Guid.NewGuid(), Name = "ExistingApp" };
+        var app = new App { Id = Guid.NewGuid(), Name = "ExistingApp" };
 
         // Setup repo to return an existing app when searching by name
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([new() { Id = Guid.NewGuid(), Name = "ExistingApp" }]);
 
         // Act
-        var result = await _systemUnderTest.CreateAsync(dto);
+        var result = await _systemUnderTest.CreateAsync(app);
 
         // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle().Which.Should().Be($"An application with the name '{dto.Name}' already exists.");
+        result.Errors.Should().ContainSingle().Which.Should().Be($"An application with the name '{app.Name}' already exists.");
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
@@ -117,32 +115,13 @@ public class AppServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsRequired()
+    public async Task UpdateAsync_ShouldReturnError_WhenAppIsInvalid_NameIsRequired()
     {
         // Arrange
-        var dto = new App { Name = "" }; // Invalid name
+        var app = new App { Name = "" }; // Invalid name
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.IsSuccess.Should().BeFalse();
-
-        // Ensure we never touched the DB
-        await _mockRepo.DidNotReceive().AddOrUpdateAsync(
-            Arg.Any<App>(),
-            Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
-    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameIsTooLong()
-    {
-        // Arrange
-        var dto = new App { Name = new string('a', 201) }; // long name
-
-        // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(app);
 
         // Assert
         result.Should().NotBeNull();
@@ -155,13 +134,32 @@ public class AppServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_ShouldReturnError_WhenDtoIsInvalid_NameContainsInvalidCharacters()
+    public async Task UpdateAsync_ShouldReturnError_WhenAppIsInvalid_NameIsTooLong()
     {
         // Arrange
-        var dto = new App { Name = "Invalid@Name" }; // name with invalid characters
+        var app = new App { Name = new string('a', 201) }; // long name
 
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(app);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeFalse();
+
+        // Ensure we never touched the DB
+        await _mockRepo.DidNotReceive().AddOrUpdateAsync(
+            Arg.Any<App>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldReturnError_WhenAppIsInvalid_NameContainsInvalidCharacters()
+    {
+        // Arrange
+        var app = new App { Name = "Invalid@Name" }; // name with invalid characters
+
+        // Act
+        var result = await _systemUnderTest.UpdateAsync(app);
 
         // Assert
         result.Should().NotBeNull();
@@ -177,18 +175,18 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldReturnError_WhenAppNameAlreadyExists()
     {
         // Arrange
-        var dto = new App { Id = Guid.NewGuid(), Name = "ExistingApp" };
+        var app = new App { Id = Guid.NewGuid(), Name = "ExistingApp" };
 
         // Setup repo to return an existing app when searching by name
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>())
                  .Returns([new() { Id = Guid.NewGuid(), Name = "ExistingApp" }]);
         // Act
-        var result = await _systemUnderTest.UpdateAsync(dto);
+        var result = await _systemUnderTest.UpdateAsync(app);
 
         // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeFalse();
-        result.Errors.Should().ContainSingle().Which.Should().Be($"An application with the name '{dto.Name}' already exists.");
+        result.Errors.Should().ContainSingle().Which.Should().Be($"An application with the name '{app.Name}' already exists.");
 
         // Ensure we never touched the DB
         await _mockRepo.DidNotReceive().AddOrUpdateAsync(
@@ -289,12 +287,12 @@ public class AppServiceTests
     public async Task UpdateAsync_ShouldMapPropertiesCorrectly()
     {
         // Arrange
-        var dto = new App { Name = "MappedApp" };
+        var app = new App { Name = "MappedApp" };
         _mockRepo.FindAsync(Arg.Any<System.Linq.Expressions.Expression<Func<App, bool>>>(), Arg.Any<bool>(), Arg.Any<bool>(), Arg.Any<bool>(), cancellationToken: Arg.Any<CancellationToken>()).Returns([]);
 
         // Act
-        await _systemUnderTest.UpdateAsync(dto);
-
+        await _systemUnderTest.UpdateAsync(app);
+        
         // Assert
         await _mockRepo.Received(1).AddOrUpdateAsync(
             Arg.Is<App>(a => a.Name == "MappedApp" && a.Id != Guid.Empty),

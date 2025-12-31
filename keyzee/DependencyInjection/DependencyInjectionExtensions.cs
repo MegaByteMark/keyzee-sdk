@@ -2,7 +2,6 @@ using FluentValidation;
 using KeyZee.Application.Common.Encryption;
 using KeyZee.Application.Common.Persistence;
 using KeyZee.Application.Common.Services;
-using KeyZee.Application.Dtos;
 using KeyZee.Application.Services;
 using KeyZee.Application.Validation;
 using KeyZee.Domain.Models;

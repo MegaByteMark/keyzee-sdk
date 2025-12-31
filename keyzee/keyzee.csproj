@@ -65,7 +65,6 @@
     <Folder Include="Application/Common/Exceptions/" />
     <Folder Include="Application/Common/Persistence/" />
     <Folder Include="Application/Common/Services/" />
-    <Folder Include="Application/Dtos/" />
     <Folder Include="Application/Services/" />
     <Folder Include="Application/Validation/" />
     <Folder Include="Infrastructure/DbContext/" />

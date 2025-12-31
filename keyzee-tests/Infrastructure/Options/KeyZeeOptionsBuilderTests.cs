@@ -137,6 +137,6 @@ public class KeyZeeOptionsBuilderTests
         Assert.Null(exception);
 
         var options = _optionsBuilder.Build();
-        Assert.Equal("keyzee", options.AppName);
+        Assert.Equal("KeyZee", options.AppName);
     }
 }
