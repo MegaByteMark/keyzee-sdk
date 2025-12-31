@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace keyzee_migrations_sqlserver.Migrations
+namespace KeyZee.Migrations.SqlServer.Migrations
 {
     [DbContext(typeof(KeyZeeDbContext))]
     partial class KeyZeeDbContextModelSnapshot : ModelSnapshot

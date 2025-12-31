@@ -62,7 +62,6 @@
     <Folder Include="Application/" />
     <Folder Include="Application/Common/" />
     <Folder Include="Application/Common/Encryption/" />
-    <Folder Include="Application/Common/Exceptions/" />
     <Folder Include="Application/Common/Persistence/" />
     <Folder Include="Application/Common/Services/" />
     <Folder Include="Application/Services/" />

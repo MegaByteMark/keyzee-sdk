@@ -326,7 +326,7 @@ public class KeyValuePairServiceTests
     }
 
     [Fact]
-    public async Task UpdateAsync_ShouldReturnAnError_WhenAppIdAndKeyAlreadyExist()
+    public async Task UpdateAsync_ShouldNotReturnAnError_WhenAppIdAndKeyAlreadyExist()
     {
         // Arrange
         Guid appId = Guid.NewGuid();
@@ -344,9 +344,9 @@ public class KeyValuePairServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result.IsSuccess.Should().BeFalse();
+        result.IsSuccess.Should().BeTrue();
 
-        await _mockRepo.DidNotReceive().AddOrUpdateAsync(
+        await _mockRepo.Received(1).AddOrUpdateAsync(
             Arg.Any<Domain.Models.KeyValuePair>(),
             Arg.Any<CancellationToken>());
     }

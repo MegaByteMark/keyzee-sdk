@@ -70,21 +70,6 @@ public sealed class KeyValuePairService : GuidValidatableDataService<Domain.Mode
     /// <returns>A Result indicating success or failure.</returns>
     protected override async Task<ValueResult<Domain.Models.KeyValuePair>> UpdateInternalAsync(Domain.Models.KeyValuePair entity, CancellationToken cancellationToken = default)
     {
-        //Check to see if another kvp with this key and appId exists, this maintains our unique constraint on name.
-        try
-        {
-            var existing = await _keyValuePairRepository.FindAsync(kvp => kvp.Key == entity.Key && kvp.AppId == entity.AppId, withIncludes: false, asNoTracking: false, includeDeleted: true, cancellationToken: cancellationToken);
-
-            if (existing.Any())
-            {
-                return ValueResult<Domain.Models.KeyValuePair>.Failure($"A KeyValuePair with the key '{entity.Key}' already exists for the specified application.");
-            }
-        }
-        catch (Exception ex)
-        {
-            return ValueResult<Domain.Models.KeyValuePair>.Failure([ex]);
-        }
-
         return await _keyValuePairRepository.AddOrUpdateAsync(entity, cancellationToken).ContinueWith(async task =>
         {
             if (task.IsFaulted)

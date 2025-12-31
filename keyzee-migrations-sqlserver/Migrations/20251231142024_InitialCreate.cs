@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace keyzee_migrations_sqlserver.Migrations
+namespace KeyZee.Migrations.SqlServer.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -60,8 +60,7 @@ namespace keyzee_migrations_sqlserver.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Apps_DeletedOn",
                 table: "Apps",
-                column: "DeletedOn",
-                filter: "DeletedOn IS NOT NULL");
+                column: "DeletedOn");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Apps_Name",
@@ -78,8 +77,7 @@ namespace keyzee_migrations_sqlserver.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_KeyValuePairs_DeletedOn",
                 table: "KeyValuePairs",
-                column: "DeletedOn",
-                filter: "DeletedOn IS NOT NULL");
+                column: "DeletedOn");
         }
 
         /// <inheritdoc />

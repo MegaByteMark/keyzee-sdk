@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace keyzee_migrations_sqlserver.Migrations
+namespace KeyZee.Migrations.SqlServer.Migrations
 {
     [DbContext(typeof(KeyZeeDbContext))]
-    [Migration("20251231093201_MinorUpdates")]
-    partial class MinorUpdates
+    [Migration("20251231142024_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

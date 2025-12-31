@@ -183,18 +183,19 @@ public sealed class AppService : GuidValidatableDataService<App>, IAppService
     /// <returns>A Result indicating the success or failure of the operation.</returns>
     protected override async Task<ValueResult<App>> UpdateInternalAsync(App entity, CancellationToken cancellationToken = default)
     {
+        //Check to see if another app with this name exists, this maintains our unique constraint on name.
+        var existingAppResult = await GetByNameWithSoftDeletedAsync(entity.Name, cancellationToken);
+
+        if (!existingAppResult.IsSuccess)
+        {
+            return ValueResult<App>.Failure(existingAppResult.Errors);
+        }
+
+        var existingApp = existingAppResult.Value;
+
         //If no id came in, check the DB to see if this app name exists already and if so update the id.
         if (entity.Id == Guid.Empty)
         {
-            var existingAppResult = await GetByNameWithSoftDeletedAsync(entity.Name, cancellationToken);
-
-            if (!existingAppResult.IsSuccess)
-            {
-                return ValueResult<App>.Failure(existingAppResult.Errors);
-            }
-
-            var existingApp = existingAppResult.Value;
-
             if (existingApp is not null)
             {
                 //found an existing app use its ID
@@ -208,16 +209,6 @@ public sealed class AppService : GuidValidatableDataService<App>, IAppService
         }
         else
         {
-            //Check to see if another app with this name exists, this maintains our unique constraint on name.
-            var existingAppResult = await GetByNameWithSoftDeletedAsync(entity.Name, cancellationToken);
-
-            if (!existingAppResult.IsSuccess)
-            {
-                return ValueResult<App>.Failure(existingAppResult.Errors);
-            }
-
-            var existingApp = existingAppResult.Value;
-
             if (existingApp is not null && existingApp.Id != entity.Id)
             {
                 return ValueResult<App>.Failure($"An application with the name '{entity.Name}' already exists.");
@@ -321,7 +312,7 @@ public sealed class AppService : GuidValidatableDataService<App>, IAppService
     /// <param name="appId">The ID of the App entity.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A Result indicating the success or failure of the operation.</returns>
-    public  override async Task<Result> DeleteByIdAsync(Guid appId, CancellationToken cancellationToken = default)
+    public override async Task<Result> DeleteByIdAsync(Guid appId, CancellationToken cancellationToken = default)
     {
         var app = await GetByIdAsync(appId, cancellationToken);
 
