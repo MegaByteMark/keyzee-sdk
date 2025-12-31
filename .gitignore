@@ -416,3 +416,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Migration bundles
+keyzee-migrations-sqlserver/bundles/
+efbundle*
+keyzee-*-bundle*
+*.efbundle
