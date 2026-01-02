@@ -1,0 +1,55 @@
+name: 🚀 Build Test Tag Release Publish 🚀
+
+on:
+#   push:
+#     branches:
+#       - main
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    
+    steps:
+      - name: 🧑‍💻 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🤖 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      # Run build-script.sh to restore, build, test and generate migration bundles for all providers.
+      - name: 🙈 Run build-script.sh
+        run: ./build-script.sh
+
+      # Pack the KeyZee project for NuGet publishing
+      - name: 🤖 Pack
+        run: dotnet pack ./keyzee/keyzee.csproj --configuration Release --no-build --output ./nupkg
+      
+    #   - name: 🪾 Create Git Tag
+    #     run: |
+    #       git config user.name github-actions
+    #       git config user.email github-actions@github.com
+    #       git tag v${{ steps.get_version.outputs.VERSION }}
+    #       git push origin v${{ steps.get_version.outputs.VERSION }}
+      
+    #   - name: 🚀 Create GitHub Release
+    #     uses: softprops/action-gh-release@v1
+    #     with:
+    #       tag_name: v${{ steps.get_version.outputs.VERSION }}
+    #       files: |
+    #         ./nupkg/*.nupkg
+    #         ./bundles/*
+    #     env:
+    #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    #   - name: 🙊 Publish to NuGet
+    #     run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    #     env:
+    #       NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

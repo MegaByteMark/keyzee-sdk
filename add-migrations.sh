@@ -5,8 +5,8 @@ set -e
 
 # Check if migration name is provided
 if [ -z "$1" ]; then
-    echo "Usage: ./add-migration-and-build.sh <MigrationName>"
-    echo "Example: ./add-migration-and-build.sh AddUserTable"
+    echo "Usage: ./add-migrations.sh <MigrationName>"
+    echo "Example: ./add-migrations.sh AddUserTable"
     exit 1
 fi
 
@@ -27,23 +27,3 @@ echo "Adding migration to SQL Server..."
 dotnet ef migrations add $MIGRATION_NAME --project ./keyzee-migrations-sqlserver/keyzee-migrations-sqlserver.csproj
 
 echo "Migrations added successfully!"
-echo ""
-echo "Building migration bundles..."
-
-# Run the build-bundles script
-echo "Building migrations bundle for PostgreSQL..."
-cd ./keyzee-migrations-postgresql
-./build-bundles.sh
-cd ..
-
-echo "Building migrations bundle for SQLite..."
-cd ./keyzee-migrations-sqlite
-./build-bundles.sh
-cd ..
-
-echo "Building migrations bundle for SQL Server..."
-cd ./keyzee-migrations-sqlserver
-./build-bundles.sh
-cd ..
-
-echo "Done! Migrations added and bundles built successfully."

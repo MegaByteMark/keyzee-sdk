@@ -419,6 +419,9 @@ FodyWeavers.xsd
 
 # Migration bundles
 keyzee-migrations-sqlserver/bundles/
+keyzee-migrations-sqlite/bundles/
+keyzee-migrations-postgresql/bundles/
 efbundle*
 keyzee-*-bundle*
 *.efbundle
+bundles/
