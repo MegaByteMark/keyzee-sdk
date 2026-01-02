@@ -19,7 +19,7 @@ KeyZee is a lightweight, self-hostable encrypted key-value pair store built with
 
 - **🔐 Built-in Encryption**: All values are encrypted using AES-256 encryption before storage
 - **🏢 Multi-Application Support**: Organise key-value pairs by application for better isolation and management
-- **🗄️ Database Agnostic**: Works with any relational database supported by Entity Framework Core (SQL Server, PostgreSQL, MySQL, SQLite, etc.)
+- **🗄️ Database Agnostic**: Works with any relational database supported by Entity Framework Core (SQL Server, PostgreSQL, SQLite, etc.)
 - **♻️ Soft Delete**: Implements soft delete pattern for data recovery and audit trails
 - **🔄 Migration Tools**: Built-in support for re-encrypting existing data with new encryption keys
 - **🎯 Clean Architecture**: Follows Clean Architecture principles with clear separation of concerns

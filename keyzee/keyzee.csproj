@@ -73,19 +73,31 @@
     <Folder Include="Infrastructure/UnitOfWork/" />
   </ItemGroup>
 
-  <!-- Project References - Used during local development -->
-  <ItemGroup Condition="'$(Configuration)' == 'Debug' OR '$(PackProject)' != 'true'">
-    <ProjectReference Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture-application/intradotnet-cleanarchitecture-application.csproj" />
-    <ProjectReference Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture-domain/intradotnet-cleanarchitecture-domain.csproj" />
-    <ProjectReference Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture-infrastructure-efcore/intradotnet-cleanarchitecture-infrastructure-efcore.csproj" />
-  </ItemGroup>
-
-  <!-- Package References - Used when packing for NuGet -->
-  <ItemGroup Condition="'$(PackProject)' == 'true'">
+  <ItemGroup>
     <PackageReference Include="IntraDotNet.CleanArchitecture.Domain" Version="1.0.0" />
     <PackageReference Include="IntraDotNet.CleanArchitecture.Application" Version="1.0.0" />
     <PackageReference Include="IntraDotNet.CleanArchitecture.Infrastructure.EFCore" Version="1.0.0" />
   </ItemGroup>
+
+  <!-- Project References - Used during local development -->
+  <!-- <ItemGroup Condition="'$(Configuration)' == 'Debug' OR '$(PackProject)' != 'true'">
+    <ProjectReference
+  Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture-application/intradotnet-cleanarchitecture-application.csproj"
+  />
+    <ProjectReference
+  Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture-domain/intradotnet-cleanarchitecture-domain.csproj"
+  />
+    <ProjectReference
+  Include="../../intradotnet-cleanarchitecture/intradotnet-cleanarchitecture-infrastructure-efcore/intradotnet-cleanarchitecture-infrastructure-efcore.csproj"
+  />
+  </ItemGroup> -->
+
+  <!-- Package References - Used when packing for NuGet -->
+  <!-- <ItemGroup Condition="'$(PackProject)' == 'true'">
+    <PackageReference Include="IntraDotNet.CleanArchitecture.Domain" Version="1.0.0" />
+    <PackageReference Include="IntraDotNet.CleanArchitecture.Application" Version="1.0.0" />
+    <PackageReference Include="IntraDotNet.CleanArchitecture.Infrastructure.EFCore" Version="1.0.0" />
+  </ItemGroup> -->
 
   <!-- Include README and Icon in package -->
   <ItemGroup>
