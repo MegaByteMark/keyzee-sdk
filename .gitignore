@@ -425,3 +425,5 @@ efbundle*
 keyzee-*-bundle*
 *.efbundle
 bundles/
+.actrc
+.secrets
