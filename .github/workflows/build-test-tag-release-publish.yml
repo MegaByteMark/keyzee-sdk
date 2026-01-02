@@ -22,7 +22,7 @@ jobs:
       - name: 🤖 Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       
       # Run build-script.sh to restore, build, test and generate migration bundles for all providers.
       - name: 🙈 Run build-script.sh
