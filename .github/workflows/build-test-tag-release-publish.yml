@@ -30,6 +30,13 @@ jobs:
       - name: 🔧 Add tools to PATH
         run: echo "/root/.dotnet/tools" >> $GITHUB_PATH
       
+      - name: 📦 Get version from keyzee project
+        id: get_version
+        run: |
+          VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" ./keyzee/keyzee.csproj)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+      
       # Run build-script.sh to restore, build, test and generate migration bundles for all providers.
       - name: 🔧 Make build script executable
         run: chmod +x ./build-script.sh
@@ -40,13 +47,17 @@ jobs:
       # Pack the KeyZee project for NuGet publishing
       - name: 🤖 Pack
         run: dotnet pack ./keyzee/keyzee.csproj --configuration Release --no-build --output ./nupkg
-      
+
       - name: 🪾 Create Git Tag
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git tag v${{ steps.get_version.outputs.VERSION }}
-          git push origin v${{ steps.get_version.outputs.VERSION }}
+          if ! git rev-parse "v${{ steps.get_version.outputs.VERSION }}" >/dev/null 2>&1; then
+            git tag v${{ steps.get_version.outputs.VERSION }}
+            git push origin v${{ steps.get_version.outputs.VERSION }}
+          else
+            echo "Tag v${{ steps.get_version.outputs.VERSION }} already exists, skipping"
+          fi
       
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v1
